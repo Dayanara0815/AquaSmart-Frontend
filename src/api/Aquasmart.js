@@ -1,0 +1,106 @@
+// URL base de la API.
+// Primero intenta usar la variable de entorno VITE_API_URL.
+// Si no existe, usa localhost como fallback.
+const BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
+
+// Función genérica para hacer peticiones HTTP al backend.
+// endpoint -> ruta específica (ej: /alerts)
+// options -> configuración extra (method, body, headers, etc.)
+async function request(endpoint, options = {}) {
+
+  // Obtiene el token JWT guardado en el navegador.
+  // Si el usuario inició sesión, aquí estará almacenado.
+  const token = localStorage.getItem("token");
+
+
+  // Hace la petición HTTP usando fetch.
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+
+    // Configuración de headers.
+    headers: {
+
+      // Indica que enviaremos/recibiremos JSON.
+      "Content-Type": "application/json",
+
+      // Si existe token:
+      // agrega Authorization: Bearer <token>
+      // Si no existe, no agrega nada.
+      ...(token
+        ? { Authorization: `Bearer ${token}` }
+        : {}),
+
+      // Permite agregar headers extra desde options.
+      ...options.headers,
+    },
+
+    // Agrega configuraciones extra:
+    // method, body, etc.
+    ...options,
+  });
+
+
+  // Si la respuesta NO fue exitosa (404, 500, 401, etc.)
+  // lanza un error.
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}`);
+  }
+
+
+  // Convierte la respuesta JSON del backend
+  // a objeto JavaScript.
+  return res.json();
+}
+
+
+// Objeto que agrupa todas las funciones de la API.
+export const api = {
+
+  // GET /water/status
+  // Obtiene estado del agua.
+  getWaterStatus: () =>
+    request("/water/status"),
+
+
+  // GET /ai/projection
+  // Obtiene proyección o análisis IA.
+  getAIProjection: () =>
+    request("/ai/projection"),
+
+
+  // GET /alerts
+  // Obtiene alertas del sistema.
+  getAlerts: () =>
+    request("/alerts"),
+
+
+  // PUT /water/valve
+  // Cambia estado de la válvula.
+  // open puede ser true o false.
+  setValve: (open) =>
+    request("/water/valve", {
+      method: "PUT",
+
+      // Convierte objeto JS a JSON.
+      body: JSON.stringify({ open }),
+    }),
+
+
+  // PUT /water/presence
+  // Indica si hay personas en casa.
+  setHomePresence: (home) =>
+    request("/water/presence", {
+      method: "PUT",
+      body: JSON.stringify({ home }),
+    }),
+
+
+  // POST /ai/chat
+  // Envía una pregunta a la IA.
+  askAI: (question) =>
+    request("/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({ question }),
+    }),
+};
