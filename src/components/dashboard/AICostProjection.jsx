@@ -28,6 +28,7 @@ export function AICostProjection({ projection, onAskAI }) {
     onAskAI?.(q);
     setInput("");
   };
+  const LITER_TO_PEN = 0.005; // S/. 5.0 per m3 / 1000 liters
 
   const realConsumption = projection.realConsumption || 0;
   const leakDetected = projection.leakDetected || 8;
@@ -38,14 +39,14 @@ export function AICostProjection({ projection, onAskAI }) {
     {
       name: "REAL CONSUMO",
       sub: "actual",
-      base: realConsumption,
-      fuga: leakDetected,
+      base: realConsumption * LITER_TO_PEN,
+      fuga: leakDetected * LITER_TO_PEN,
     },
     {
       name: "PRONÓSTICO IA",
       sub: "end month",
-      base: baseConsumption,
-      fuga: leakEstimate,
+      base: baseConsumption * LITER_TO_PEN,
+      fuga: leakEstimate * LITER_TO_PEN,
     },
   ];
 
@@ -53,9 +54,9 @@ export function AICostProjection({ projection, onAskAI }) {
     <div
       className="rounded-4 p-4 h-100 d-flex flex-column gap-4"
       style={{
-        background: "#ffffff",
+        background: "var(--surface)",
         boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-        border: "1px solid #e5e7eb",
+        border: "1px solid var(--header-border)",
       }}
     >
       {/* HEADER */}
@@ -65,7 +66,7 @@ export function AICostProjection({ projection, onAskAI }) {
           style={{
             width: 34,
             height: 34,
-            background: "#dbeafe",
+            background: "var(--accent-surface)",
             color: "#2563eb",
             fontSize: 13,
           }}
@@ -75,11 +76,11 @@ export function AICostProjection({ projection, onAskAI }) {
         <div>
           <h6
             className="mb-0 fw-bold"
-            style={{ fontSize: 13, color: "#1f2937" }}
+            style={{ fontSize: 13, color: "var(--text)" }}
           >
             Proyección de Costos
           </h6>
-          <span style={{ fontSize: 11, color: "#9ca3af" }}>
+          <span style={{ fontSize: 11, color: "var(--muted)" }}>
             Análisis inteligente mensual
           </span>
         </div>
@@ -90,7 +91,7 @@ export function AICostProjection({ projection, onAskAI }) {
         <span className="text-muted" style={{ fontSize: 11 }}>
           Proyección Recibo
         </span>
-        <h2 className="fw-bold mb-0" style={{ color: "#111827", fontSize: 34 }}>
+        <h2 className="fw-bold mb-0" style={{ color: "var(--text)", fontSize: 34 }}>
           S/. {(projection.projectedBill || 0).toFixed(2)}
         </h2>
       </div>
@@ -103,7 +104,7 @@ export function AICostProjection({ projection, onAskAI }) {
             margin={{ top: 30, right: 20, left: 20, bottom: 10 }}
             barSize={90}
           >
-            <CartesianGrid vertical={false} stroke="#f3f4f6" />
+            <CartesianGrid vertical={false} stroke="color-mix(in srgb, var(--muted) 25%, transparent)" />
             <XAxis
               dataKey="name"
               axisLine={false}
@@ -118,7 +119,7 @@ export function AICostProjection({ projection, onAskAI }) {
                     textAnchor="middle"
                     fontSize={10}
                     fontWeight={600}
-                    fill="#374151"
+                    fill="var(--subtle)"
                   >
                     {payload.value}
                   </text>
@@ -128,7 +129,7 @@ export function AICostProjection({ projection, onAskAI }) {
                     dy={26}
                     textAnchor="middle"
                     fontSize={9}
-                    fill="#9ca3af"
+                    fill="var(--muted)"
                   >
                     {chartData[index].sub}
                   </text>
@@ -142,6 +143,7 @@ export function AICostProjection({ projection, onAskAI }) {
                 border: "none",
                 boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
               }}
+              formatter={(value) => [`S/. ${Number(value).toFixed(2)}`]}
             />
 
             <Bar dataKey="base" stackId="a" radius={[0, 0, 10, 10]}>
@@ -150,7 +152,7 @@ export function AICostProjection({ projection, onAskAI }) {
               <LabelList
                 dataKey="base"
                 position="center"
-                formatter={(v) => `S/. ${v}`}
+                formatter={(v) => `S/. ${Number(v).toFixed(2)}`}
                 style={{ fontSize: 10, fontWeight: 600, fill: "#1e3a8a" }}
               />
             </Bar>
@@ -165,7 +167,7 @@ export function AICostProjection({ projection, onAskAI }) {
                   `S/. ${((entry?.base || 0) + value).toFixed(2)}`,
                 fontSize: 13,
                 fontWeight: 600,
-                fill: "#111827",
+                fill: "var(--text)",
                 offset: 8,
               }}
             >
@@ -174,7 +176,7 @@ export function AICostProjection({ projection, onAskAI }) {
               <LabelList
                 dataKey="fuga"
                 position="center"
-                formatter={(v) => `S/. ${v}`}
+                formatter={(v) => `S/. ${Number(v).toFixed(2)}`}
                 style={{ fontSize: 10, fontWeight: 600, fill: "#7f1d1d" }}
               />
             </Bar>
@@ -185,11 +187,11 @@ export function AICostProjection({ projection, onAskAI }) {
       {/* IA MESSAGE */}
       <div
         className="rounded-4 p-3"
-        style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}
+        style={{ background: "var(--accent-surface)", border: "1px solid var(--accent-border)" }}
       >
         <p
           className="mb-0"
-          style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}
+          style={{ fontSize: 12, color: "var(--subtle)", lineHeight: 1.5 }}
         >
           <span className="fw-semibold" style={{ color: "#2563eb" }}>
             Análisis IA:
@@ -208,7 +210,7 @@ export function AICostProjection({ projection, onAskAI }) {
         </div>
         <div
           className="d-flex align-items-center gap-2 rounded-4 px-3 py-2"
-          style={{ border: "1.5px solid #e5e7eb", background: "#fff" }}
+          style={{ border: "1.5px solid var(--input-border)", background: "var(--input-bg)" }}
         >
           <input
             value={input}
