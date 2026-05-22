@@ -1,3 +1,5 @@
+import { Moon, Sun } from "lucide-react";
+
 /**
  * Toggle.jsx
  * Componente reutilizable tipo switch ON/OFF.
@@ -12,7 +14,34 @@ export function Toggle({
   checked,
   onChange,
   disabled = false,
+  mode = "switch",
 }) {
+  if (mode === "theme") {
+    const iconColor = "var(--text)";
+    const bg = "var(--surface-soft, #f1f5f9)";
+
+    return (
+      <button
+        type="button"
+        onClick={() => !disabled && onChange(!checked)}
+        aria-label={checked ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+        title={checked ? "Cambiar a claro" : "Cambiar a oscuro"}
+        disabled={disabled}
+        className="d-inline-flex align-items-center justify-content-center border-0 rounded-pill"
+        style={{
+          width: 42,
+          height: 28,
+          background: bg,
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+          transition: "all 0.2s ease",
+        }}
+      >
+        {checked ? <Sun size={16} color={iconColor} /> : <Moon size={16} color={iconColor} />}
+      </button>
+    );
+  }
+
   return (
     <div
 

@@ -82,7 +82,8 @@ export function WaterStatusCard({ data, onToggleValve, onTogglePresence }) {
       <div
         className="text-center rounded-4 py-3 mb-3"
         style={{
-          background: "rgba(59,130,246,.08)",
+          background: "color-mix(in srgb, var(--primary) 14%, transparent)",
+          border: "1px solid color-mix(in srgb, var(--primary) 25%, transparent)",
         }}
       >
         <p
@@ -90,7 +91,7 @@ export function WaterStatusCard({ data, onToggleValve, onTogglePresence }) {
           style={{
             fontSize: 11,
             letterSpacing: 1,
-            color: "#64748b",
+            color: "var(--muted)",
           }}
         >
           Costo De Hoy
@@ -105,9 +106,9 @@ export function WaterStatusCard({ data, onToggleValve, onTogglePresence }) {
       <div className="d-flex flex-column gap-2 mb-3">
         {/* Toggle válvula */}
         <div className="d-flex align-items-center justify-content-between">
-          <span style={{ fontSize: 13 }} className="text-secondary">
+          <span style={{ fontSize: 13 }} className="text-muted">
             Estado de Válvula:{" "}
-            <span className="text-dark">
+            <span style={{ color: "var(--text)" }}>
               {data.valveOpen ? "Abierto" : "Cerrado"}
             </span>
           </span>
@@ -117,9 +118,9 @@ export function WaterStatusCard({ data, onToggleValve, onTogglePresence }) {
 
         {/* Toggle presencia */}
         <div className="d-flex align-items-center justify-content-between">
-          <span style={{ fontSize: 13 }} className="text-secondary">
+          <span style={{ fontSize: 13 }} className="text-muted">
             Se encuentra en casa:{" "}
-            <span className="text-dark">{data.isHome ? "Sí" : "No"}</span>
+            <span style={{ color: "var(--text)" }}>{data.isHome ? "Sí" : "No"}</span>
           </span>
 
           <Toggle checked={data.isHome} onChange={onTogglePresence} />

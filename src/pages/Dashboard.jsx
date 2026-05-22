@@ -4,7 +4,7 @@ import { AICostProjection } from "../components/dashboard/AICostProjection";
 import { useWaterData }     from "../hooks/useWaterData";
 
 export function Dashboard() {
-  const { data, loading, error, toggleValve, togglePresence } = useWaterData();
+  const { data, loading, error, toggleValve, togglePresence, askAI } = useWaterData();
 
   if (loading) {
     return (
@@ -23,8 +23,7 @@ export function Dashboard() {
   }
 
   const handleAskAI = (question) => {
-    // TODO: conectar a api.askAI(question) cuando el backend esté listo
-    console.log("Pregunta IA:", question);
+    void askAI(question);
   };
 
   return (

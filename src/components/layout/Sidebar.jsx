@@ -3,6 +3,7 @@ import {
   BarChart2,
   Bell,
   Settings,
+  ShieldCheck,
   LogOut,
 } from "lucide-react";
 
@@ -32,6 +33,11 @@ const NAV_ITEMS = [
     label: "Ajustes",
     icon: Settings,
   },
+  {
+    path: "/cierres",
+    label: "Cierres",
+    icon: ShieldCheck,
+  },
 ];
 
 export function Sidebar({ onLogout }) {
@@ -39,7 +45,7 @@ export function Sidebar({ onLogout }) {
 
   return (
     <aside
-      className="d-flex flex-column bg-white border-end"
+      className="d-flex flex-column border-end app-sidebar"
       style={{
         width: 240,
         minHeight: "100%",
@@ -56,10 +62,10 @@ export function Sidebar({ onLogout }) {
               <div key={path}>
                 <Link
                   to={path}
-                  className={`d-flex align-items-center gap-2 w-100 text-decoration-none border-0 rounded-3 px-3 py-2 ${
+                  className={`d-flex align-items-center gap-2 w-100 text-decoration-none border-0 rounded-3 px-3 py-2 sidebar-link ${
                     active
-                      ? "bg-primary bg-opacity-10 text-primary fw-semibold"
-                      : "text-secondary"
+                      ? "sidebar-link-active fw-semibold"
+                      : ""
                   }`}
                   style={{
                     fontSize: 15,
@@ -75,10 +81,7 @@ export function Sidebar({ onLogout }) {
                   NAV_ITEMS.length - 1 && (
                   <hr
                     className="my-1 mx-3"
-                    style={{
-                      borderColor: "#f3f4f6",
-                      opacity: 1,
-                    }}
+                    style={{ opacity: 1 }}
                   />
                 )}
               </div>
@@ -90,7 +93,7 @@ export function Sidebar({ onLogout }) {
       <div className="px-3 pt-2">
         <button
           onClick={onLogout}
-          className="d-flex align-items-center gap-2 w-100 border-0 bg-transparent rounded-3 px-3 py-2 text-secondary text-start"
+          className="d-flex align-items-center gap-2 w-100 border-0 bg-transparent rounded-3 px-3 py-2 text-start sidebar-link"
           style={{ fontSize: 15 }}
         >
           <LogOut size={20} />

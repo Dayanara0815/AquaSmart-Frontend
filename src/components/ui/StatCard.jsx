@@ -9,8 +9,9 @@ export function StatCard({ icon: Icon, label, value, unit }) {
     <div
       className="flex-fill rounded-4 p-4 text-center"
       style={{
-        background: "#eff6ff",
+        background: "var(--accent-surface)",
         boxShadow: "0 4px 12px rgba(37,99,235,.10)",
+        border: "1px solid var(--accent-border)",
       }}
     >
       {/* Ícono */}
@@ -27,7 +28,7 @@ export function StatCard({ icon: Icon, label, value, unit }) {
         className="fw-semibold mb-2"
         style={{
           fontSize: 12,
-          color: "#1e3a8a",
+          color: "var(--subtle)",
           letterSpacing: 0.5,
         }}
       >
@@ -47,7 +48,7 @@ export function StatCard({ icon: Icon, label, value, unit }) {
             className="fw-normal ms-1"
             style={{
               fontSize: 13,
-              color: "#64748b",
+              color: "var(--muted)",
             }}
           >
             {unit}

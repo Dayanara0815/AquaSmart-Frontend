@@ -10,31 +10,10 @@ import { Sidebar } from "./components/layout/Sidebar";
 import { TopBar } from "./components/layout/TopBar";
 
 import { Dashboard } from "./pages/Dashboard";
-
-// Temporales
-function Reportes() {
-  return (
-    <div className="p-4 text-muted">
-      Reportes — próximamente
-    </div>
-  );
-}
-
-function Notificaciones() {
-  return (
-    <div className="p-4 text-muted">
-      Notificaciones — próximamente
-    </div>
-  );
-}
-
-function Ajustes() {
-  return (
-    <div className="p-4 text-muted">
-      Ajustes — próximamente
-    </div>
-  );
-}
+import { Reportes } from "./pages/Reportes";
+import { Notificaciones } from "./pages/Notificaciones";
+import { Ajustes } from "./pages/Ajustes";
+import { Cierres } from "./pages/Cierres";
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] =
@@ -48,7 +27,7 @@ export default function App() {
   };
 
   return (
-    <div className="d-flex flex-column vh-100 bg-light">
+    <div className="d-flex flex-column vh-100 app-shell">
       <TopBar
         onMenuToggle={() =>
           setSidebarOpen((p) => !p)
@@ -84,6 +63,11 @@ export default function App() {
               element={<Ajustes />}
             />
 
+            <Route
+              path="/cierres"
+              element={<Cierres />}
+            />
+
             {/* Ruta no encontrada */}
             <Route
               path="*"
@@ -98,7 +82,7 @@ export default function App() {
       </div>
 
       <footer
-        className="text-center text-muted border-top bg-white py-3"
+        className="text-center border-top py-3 app-footer"
         style={{ fontSize: 12 }}
       >
         © 2026 – AquaSmart
