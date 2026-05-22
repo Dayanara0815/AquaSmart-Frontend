@@ -2,7 +2,7 @@
 // Primero intenta usar la variable de entorno VITE_API_URL.
 // Si no existe, usa localhost como fallback.
 const BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 
 // Función genérica para hacer peticiones HTTP al backend.
@@ -50,7 +50,32 @@ async function request(endpoint, options = {}) {
 
   // Convierte la respuesta JSON del backend
   // a objeto JavaScript.
-  return res.json();
+  const contentType = res.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return res.json();
+  }
+
+  return null;
+}
+
+async function requestText(endpoint, options = {}) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}`);
+  }
+
+  return res.text();
 }
 
 
@@ -73,6 +98,61 @@ export const api = {
   // Obtiene alertas del sistema.
   getAlerts: () =>
     request("/alerts"),
+
+  // GET /user/current
+  // Obtiene información básica del usuario (titular) conectado.
+  getCurrentUser: () =>
+    request("/user/current"),
+
+  // GET /user/theme
+  getUserTheme: () =>
+    request("/user/theme"),
+
+  // POST /user/theme
+  setUserTheme: (theme) =>
+    request("/user/theme", {
+      method: "POST",
+      body: JSON.stringify({ theme }),
+    }),
+
+
+  // GET /alerts/{index}
+  // Obtiene el detalle de una alerta específica.
+  getAlertDetail: (index) =>
+    request(`/alerts/${index}`),
+
+
+  // GET /water/valve/history
+  // Obtiene el historial de cierres de la válvula.
+  getValveHistory: () =>
+    request("/water/valve/history"),
+
+
+  // GET /reports/weekly
+  // Obtiene el historial semanal de consumo.
+  getWeeklyReport: (from, to) => {
+    const params = new URLSearchParams();
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    const suffix = params.toString() ? `?${params.toString()}` : "";
+    return request(`/reports/weekly${suffix}`);
+  },
+
+
+
+  // GET /settings/notifications
+  // Obtiene la configuración de notificaciones.
+  getNotificationSettings: () =>
+    request("/settings/notifications"),
+
+
+  // PUT /settings/notifications
+  // Actualiza la configuración de notificaciones.
+  updateNotificationSettings: (settings) =>
+    request("/settings/notifications", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    }),
 
 
   // PUT /water/valve
