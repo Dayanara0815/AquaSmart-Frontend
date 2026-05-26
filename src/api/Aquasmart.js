@@ -101,8 +101,10 @@ export const api = {
 
   // GET /user/current
   // Obtiene información básica del usuario (titular) conectado.
-  getCurrentUser: () =>
-    request("/user/current"),
+  getCurrentUser: (email) => {
+    const suffix = email ? `?email=${encodeURIComponent(email)}` : "";
+    return request(`/user/current${suffix}`);
+  },
 
   // GET /user/theme
   getUserTheme: () =>

@@ -1,16 +1,15 @@
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, Bell, User, LogOut } from "lucide-react";
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/Aquasmart";
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { Toggle } from "../ui/Toggle";
 
-export function TopBar({ onMenuToggle }) {
-  const [user, setUser] = useState(null);
+export function TopBar({ user, onLogout, onMenuToggle }) {
   const [alertCount, setAlertCount] = useState(0);
   const navigate = useNavigate();
 
-  const fullName = (user?.fullName || "").trim();
+  const fullName = (user?.fullName || "Usuario X").trim();
   const nameParts = fullName.split(/\s+/).filter(Boolean);
 
   // UI recommendation: show only first name + first surname (2 words)
@@ -19,17 +18,20 @@ export function TopBar({ onMenuToggle }) {
       ? `${nameParts[0]} ${nameParts[1]}`
       : nameParts[0] || "Usuario X";
 
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case "DOMESTICO": return "Vecino";
+      case "COMERCIO": return "Comercio";
+      case "TECNICO": return "Técnico";
+      case "MUNICIPAL": return "Municipal";
+      default: return "Usuario";
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
-      try {
-        const u = await api.getCurrentUser();
-        if (mounted) setUser(u);
-      } catch (e) {
-        // ignore - keep fallback
-      }
-
       try {
         const alerts = await api.getAlerts();
         if (mounted && Array.isArray(alerts)) {
@@ -45,17 +47,15 @@ export function TopBar({ onMenuToggle }) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [user]);
 
-  const initials = user
-    ? displayName
-        .split(" ")
-        .map((p) => p?.[0])
-        .filter(Boolean)
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : null;
+  const initials = displayName
+    .split(" ")
+    .map((p) => p?.[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -137,7 +137,12 @@ export function TopBar({ onMenuToggle }) {
               <User size={16} color="#fff" />
             )}
           </div>
-          <span className="fw-medium user-name">{displayName}</span>
+          <div className="d-flex flex-column align-items-start leading-tight">
+            <span className="fw-medium user-name" style={{ lineHeight: 1.2 }}>{displayName}</span>
+            <span className="badge text-uppercase p-0 mt-0.5" style={{ fontSize: 9, fontWeight: 600, color: "var(--primary)" }}>
+              {getRoleLabel(user?.role)}
+            </span>
+          </div>
         </div>
 
         <div className="position-relative">
@@ -158,6 +163,16 @@ export function TopBar({ onMenuToggle }) {
             </span>
           )}
         </div>
+
+        {/* Botón Cerrar Sesión para móviles y tablets */}
+        <button
+          onClick={onLogout}
+          className="d-flex align-items-center justify-content-center border-0 rounded-circle bg-transparent p-0 text-danger"
+          style={{ width: 36, height: 36 }}
+          title="Cerrar Sesión"
+        >
+          <LogOut size={20} />
+        </button>
       </div>
     </header>
   );

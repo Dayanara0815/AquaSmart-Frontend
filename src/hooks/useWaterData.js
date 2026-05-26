@@ -106,7 +106,7 @@ export function useWaterData() {
 
     const interval = setInterval(() => {
       fetchData({ silent: true });
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [fetchData]);
