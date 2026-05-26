@@ -42,6 +42,14 @@ const NAV_ITEMS = [
 
 export function Sidebar({ onLogout }) {
   const location = useLocation();
+  const userRole = localStorage.getItem("userRole") || "DOMESTICO";
+
+  const allowedItems = NAV_ITEMS.filter(({ path }) => {
+    if (userRole === "TECNICO" || userRole === "MUNICIPAL") {
+      return path === "/" || path === "/ajustes";
+    }
+    return true;
+  });
 
   return (
     <aside
@@ -53,7 +61,7 @@ export function Sidebar({ onLogout }) {
       }}
     >
       <nav className="d-flex flex-column flex-fill px-3 mt-3">
-        {NAV_ITEMS.map(
+        {allowedItems.map(
           ({ path, label, icon: Icon }, index) => {
             const active =
               location.pathname === path;
@@ -78,7 +86,7 @@ export function Sidebar({ onLogout }) {
                 </Link>
 
                 {index <
-                  NAV_ITEMS.length - 1 && (
+                  allowedItems.length - 1 && (
                   <hr
                     className="my-1 mx-3"
                     style={{ opacity: 1 }}

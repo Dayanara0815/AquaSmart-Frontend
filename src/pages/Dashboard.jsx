@@ -3,6 +3,7 @@ import {
   Droplets, Calendar, Shield, MapPin, Activity, 
   FileText, AlertTriangle, CheckCircle2, User, RefreshCw
 } from "lucide-react";
+import { api } from "../api/Aquasmart";
 import { WaterCutAlert } from "../components/dashboard/WaterCutAlert";
 import { WaterStatusCard } from "../components/dashboard/WaterStatusCard";
 import { AICostProjection } from "../components/dashboard/AICostProjection";
@@ -29,11 +30,54 @@ export function Dashboard() {
   ]);
   const [newLeakLocation, setNewLeakLocation] = useState("");
 
+  // Estados e integraciones para la base de datos relacional de PostgreSQL
+  const [alerts, setAlerts] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+
+  const loadAlertsFromDb = async () => {
+    try {
+      const response = await api.getAlerts();
+      if (Array.isArray(response)) {
+        setAlerts(response);
+      }
+    } catch (e) {
+      console.error("Error al cargar alertas de la base de datos", e);
+    }
+  };
+
+  const handleUpdateStatus = async (id, status) => {
+    try {
+      setAlertsLoading(true);
+      await api.updateAlertStatus(id, status);
+      await loadAlertsFromDb();
+    } catch (e) {
+      console.error("Error al actualizar el estado de la alerta", e);
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
+  const handleSimulateLeak = async () => {
+    try {
+      setAlertsLoading(true);
+      await api.reportMunicipalLeak("Av. Puente Piedra Cdra 5 (Simulación Automatizada UTP)");
+      window.location.reload();
+    } catch (err) {
+      console.error("Error al simular fuga hídrica", err);
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const userRole = localStorage.getItem("userRole") || "DOMESTICO";
     const name = localStorage.getItem("userFullName") || "María Fernanda";
     setRole(userRole);
     setUserName(name.split(" ")[0]);
+
+    if (userRole === "TECNICO" || userRole === "MUNICIPAL") {
+      void loadAlertsFromDb();
+    }
   }, [data]);
 
   if (loading) {
@@ -66,6 +110,40 @@ export function Dashboard() {
       <main className="flex-fill overflow-auto p-3 p-md-4">
         {/* Banner de alerta de corte preventivo */}
         <WaterCutAlert alert={data.alert} />
+
+        {/* Panel de Simulación Académica UTP (Fase 2) */}
+        <div 
+          className="card border-0 rounded-4 p-3 mb-4 shadow-sm"
+          style={{
+            background: "rgba(34, 211, 238, 0.08)",
+            border: "1px solid rgba(34, 211, 238, 0.2)",
+          }}
+        >
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div className="d-flex align-items-center gap-3">
+              <div className="rounded-3 p-2 bg-info-subtle text-info d-flex align-items-center justify-content-center animate-pulse" style={{ backgroundColor: "rgba(34, 211, 238, 0.15)", color: "#06b6d4" }}>
+                <Activity size={22} />
+              </div>
+              <div>
+                <h6 className="fw-bold mb-0 text-info" style={{ color: "#0891b2" }}>
+                  🧪 Entorno Académico de Simulación AquaSmart (Fase 2)
+                </h6>
+                <p className="mb-0 text-muted small mt-0.5" style={{ fontSize: 12.5 }}>
+                  Prueba la recepción de alertas automáticas del Municipio e interactúa con el Técnico en tiempo real.
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={handleSimulateLeak}
+              disabled={alertsLoading}
+              className="btn btn-info btn-sm rounded-3 px-3 py-2 fw-semibold text-white d-flex align-items-center gap-2"
+              style={{ backgroundColor: "#06b6d4", border: "none" }}
+            >
+              <RefreshCw size={14} className={alertsLoading ? "spin" : ""} />
+              Simular Fuga Vial en Puente Piedra
+            </button>
+          </div>
+        </div>
 
         {/* Nota contextual si es Comercio (Luis Condori) */}
         {role === "COMERCIO" && (
@@ -291,6 +369,106 @@ export function Dashboard() {
                   </div>
                 ))}
               </div>
+
+              {/* Módulo Adicional: Gestión de Fugas en Base de Datos PostgreSQL */}
+              <h5 className="fw-bold mt-4 mb-3 d-flex align-items-center gap-2 border-top pt-3" style={{ borderColor: "var(--header-border)" }}>
+                <Shield size={20} className="text-primary" />
+                Órdenes de Trabajo Hídricas (PostgreSQL)
+              </h5>
+
+              <div className="d-flex flex-column gap-2">
+                {alerts.length > 0 ? (
+                  alerts.map((alert) => (
+                    <div 
+                      key={alert.id} 
+                      className="p-3 rounded-4" 
+                      style={{ 
+                        backgroundColor: "var(--surface-soft)",
+                        border: "1px solid var(--header-border)" 
+                      }}
+                    >
+                      <div className="d-flex align-items-center justify-content-between mb-1">
+                        <span className="fw-bold" style={{ fontSize: 13 }}>
+                          {alert.type || "Anomalía"} #{alert.id}
+                        </span>
+                        <span 
+                          className={`badge ${
+                            alert.state === "Pendiente" || alert.state === "Activa"
+                              ? "bg-danger text-white animate-pulse" 
+                              : alert.state === "En Proceso" || alert.state === "En reparación"
+                                ? "bg-warning text-dark" 
+                                : alert.state === "En Revisión"
+                                  ? "bg-info text-dark"
+                                  : alert.state === "Fallado" || alert.state === "Rechazado"
+                                    ? "bg-secondary text-white"
+                                    : "bg-success text-white"
+                          }`}
+                          style={{ fontSize: 9 }}
+                        >
+                          {alert.state}
+                        </span>
+                      </div>
+                      <p className="text-muted mb-2" style={{ fontSize: 11.5, lineHeight: 1.4 }}>
+                        {alert.message}
+                      </p>
+                      <div className="d-flex align-items-center justify-content-between mb-2 text-muted" style={{ fontSize: 10.5 }}>
+                        <span>🕒 {alert.timestamp || "Reciente"}</span>
+                      </div>
+                      
+                      {/* Botones de acción colaborativa de la Base de Datos estilo JIRA */}
+                      {(alert.state === "Pendiente" || alert.state === "Activa") && (
+                        <button
+                          onClick={() => void handleUpdateStatus(alert.id, "En Proceso")}
+                          className="btn btn-warning btn-sm w-100 rounded-3 py-1.5 fw-semibold text-dark mt-1"
+                          style={{ fontSize: 12 }}
+                        >
+                          🛠️ Iniciar Reparación
+                        </button>
+                      )}
+                      {(alert.state === "En Proceso" || alert.state === "En reparación") && (
+                        <div className="d-flex gap-2 mt-1">
+                          <button
+                            onClick={() => void handleUpdateStatus(alert.id, "En Revisión")}
+                            className="btn btn-info btn-sm flex-fill rounded-3 py-1.5 fw-semibold text-dark"
+                            style={{ fontSize: 12 }}
+                          >
+                            🔍 Enviar a Revisión
+                          </button>
+                          <button
+                            onClick={() => void handleUpdateStatus(alert.id, "Fallado")}
+                            className="btn btn-danger btn-sm flex-fill rounded-3 py-1.5 fw-semibold text-white"
+                            style={{ fontSize: 12 }}
+                          >
+                            ❌ Reportar Fallo
+                          </button>
+                        </div>
+                      )}
+                      {alert.state === "En Revisión" && (
+                        <button
+                          onClick={() => void handleUpdateStatus(alert.id, "Cumplido")}
+                          className="btn btn-success btn-sm w-100 rounded-3 py-1.5 fw-semibold text-white mt-1"
+                          style={{ fontSize: 12 }}
+                        >
+                          ✅ Completar Tarea (Cumplido)
+                        </button>
+                      )}
+                      {(alert.state === "Fallado" || alert.state === "Rechazado") && (
+                        <button
+                          onClick={() => void handleUpdateStatus(alert.id, "En Proceso")}
+                          className="btn btn-warning btn-sm w-100 rounded-3 py-1.5 fw-semibold text-dark mt-1"
+                          style={{ fontSize: 12 }}
+                        >
+                          🔄 Reabrir e Iniciar Trabajo
+                        </button>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted small py-3">
+                    No hay órdenes de trabajo registradas en la base de datos relacional.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -302,20 +480,19 @@ export function Dashboard() {
   // VIEW 3: GESTOR MUNICIPAL (ALEXIS MAZA)
   // ==========================================
   if (role === "MUNICIPAL") {
-    const handleAddLeak = (e) => {
+    const handleAddLeak = async (e) => {
       e.preventDefault();
       if (!newLeakLocation.trim()) return;
-      setStreetLeaks([
-        ...streetLeaks,
-        {
-          id: Date.now(),
-          location: newLeakLocation.trim(),
-          size: "Mediana",
-          status: "Reportado",
-          crew: "Municipio Por Asignar",
-        },
-      ]);
-      setNewLeakLocation("");
+      try {
+        setAlertsLoading(true);
+        await api.reportMunicipalLeak(newLeakLocation.trim());
+        await loadAlertsFromDb();
+        setNewLeakLocation("");
+      } catch (err) {
+        console.error("Error al reportar la fuga municipal", err);
+      } finally {
+        setAlertsLoading(false);
+      }
     };
 
     return (
@@ -393,24 +570,60 @@ export function Dashboard() {
               </h5>
 
               <div className="d-flex flex-column gap-3 mb-3">
-                {streetLeaks.map((leak) => (
-                  <div 
-                    key={leak.id} 
-                    className="p-3 rounded-4" 
-                    style={{ 
-                      backgroundColor: "var(--surface-soft)", 
-                      border: "1px solid var(--header-border)" 
-                    }}
-                  >
-                    <div className="d-flex align-items-center justify-content-between mb-1">
-                      <span className="fw-bold" style={{ fontSize: 13 }}>{leak.location}</span>
-                      <span className="badge bg-warning text-dark" style={{ fontSize: 9 }}>{leak.status}</span>
+                {alerts.filter(a => a.type === "Fuga").length > 0 ? (
+                  alerts.filter(a => a.type === "Fuga").map((leak) => (
+                    <div 
+                      key={leak.id} 
+                      className="p-3 rounded-4" 
+                      style={{ 
+                        backgroundColor: "var(--surface-soft)", 
+                        border: "1px solid var(--header-border)" 
+                      }}
+                    >
+                      <div className="d-flex align-items-center justify-content-between mb-1">
+                        <span className="fw-bold" style={{ fontSize: 13.5 }}>{leak.message}</span>
+                        <span 
+                          className={`badge ${
+                            leak.state === "Pendiente" || leak.state === "Activa"
+                              ? "bg-danger text-white animate-pulse" 
+                              : leak.state === "En Proceso" || leak.state === "En reparación"
+                                ? "bg-warning text-dark" 
+                                : leak.state === "En Revisión"
+                                  ? "bg-info text-dark"
+                                  : leak.state === "Fallado" || leak.state === "Rechazado"
+                                    ? "bg-secondary text-white"
+                                    : "bg-success text-white"
+                          }`} 
+                          style={{ fontSize: 9 }}
+                        >
+                          {leak.state}
+                        </span>
+                      </div>
+                      <p className="text-muted mb-0 small">
+                        <strong>Fecha de reporte:</strong> {leak.timestamp || "Reciente"} | <strong>Canal:</strong> Reporte Municipal
+                      </p>
                     </div>
-                    <p className="text-muted mb-0" style={{ fontSize: 11 }}>
-                      <strong>Caudal Estimado:</strong> {leak.size} | <strong>Cuadrilla:</strong> {leak.crew}
-                    </p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  streetLeaks.map((leak) => (
+                    <div 
+                      key={leak.id} 
+                      className="p-3 rounded-4" 
+                      style={{ 
+                        backgroundColor: "var(--surface-soft)", 
+                        border: "1px solid var(--header-border)" 
+                      }}
+                    >
+                      <div className="d-flex align-items-center justify-content-between mb-1">
+                        <span className="fw-bold" style={{ fontSize: 13 }}>{leak.location}</span>
+                        <span className="badge bg-warning text-dark" style={{ fontSize: 9 }}>{leak.status}</span>
+                      </div>
+                      <p className="text-muted mb-0" style={{ fontSize: 11 }}>
+                        <strong>Caudal Estimado:</strong> {leak.size} | <strong>Cuadrilla:</strong> {leak.crew}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Agregar Reporte */}

@@ -128,10 +128,16 @@ export function TopBar({ user, onLogout, onMenuToggle }) {
 
         <div className="d-flex align-items-center gap-2" style={{ fontSize: 14 }}>
           <div
-            className="d-flex align-items-center justify-content-center rounded-circle text-white avatar-circle"
+            className="d-flex align-items-center justify-content-center rounded-circle text-white avatar-circle overflow-hidden"
             style={{ width: 32, height: 32 }}
           >
-            {initials ? (
+            {user?.fotoPerfil ? (
+              <img
+                src={user.fotoPerfil}
+                alt={displayName}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : initials ? (
               <span style={{ fontSize: 12, fontWeight: 600 }}>{initials}</span>
             ) : (
               <User size={16} color="#fff" />

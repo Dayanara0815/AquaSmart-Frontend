@@ -149,7 +149,8 @@ export function useWaterData() {
     }
 
     try {
-      const response = await api.askAI(question.trim());
+      const email = localStorage.getItem("userEmail");
+      const response = await api.askAI(question.trim(), email);
       if (response?.answer) {
         setCustomAiMessage(response.answer);
       }

@@ -200,34 +200,17 @@ export function AICostProjection({ projection, onAskAI }) {
         </p>
       </div>
 
-      {/* CHAT */}
-      <div className="d-flex flex-column gap-2 mt-auto">
-        <div className="d-flex align-items-center gap-2 text-muted">
-          <MessageCircle size={14} />
-          <span style={{ fontSize: 11, fontWeight: 600 }}>
-            Pregunta a la IA
-          </span>
-        </div>
-        <div
-          className="d-flex align-items-center gap-2 rounded-4 px-3 py-2"
-          style={{ border: "1.5px solid var(--input-border)", background: "var(--input-bg)" }}
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Escribe tu pregunta..."
-            className="border-0 flex-fill bg-transparent"
-            style={{ fontSize: 12, outline: "none" }}
-          />
-          <button
-            onClick={handleSend}
-            className="d-flex align-items-center justify-content-center border-0 rounded-circle"
-            style={{ width: 32, height: 32, background: "#3b82f6" }}
-          >
-            <Send size={13} color="#fff" />
-          </button>
-        </div>
+      {/* INDICACIÓN DE ASISTENTE */}
+      <div 
+        className="rounded-4 p-3 mt-auto text-center"
+        style={{ 
+          background: "rgba(37, 99, 235, 0.05)", 
+          border: "1px dashed rgba(37, 99, 235, 0.25)" 
+        }}
+      >
+        <span style={{ fontSize: 11.5, color: "var(--subtle)" }}>
+          💬 ¿Deseas conversar? Usa el **asistente flotante AquaBot IA** en la esquina inferior derecha para revisar tu historial de conversación y realizar consultas de telemetría en tiempo real.
+        </span>
       </div>
     </div>
   );

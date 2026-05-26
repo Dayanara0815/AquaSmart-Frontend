@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 export function MobileNavBar() {
   const location = useLocation();
+  const userRole = localStorage.getItem("userRole") || "DOMESTICO";
 
   const NAV_ITEMS = [
     {
@@ -32,6 +33,13 @@ export function MobileNavBar() {
     },
   ];
 
+  const allowedItems = NAV_ITEMS.filter(({ path }) => {
+    if (userRole === "TECNICO" || userRole === "MUNICIPAL") {
+      return path === "/" || path === "/ajustes";
+    }
+    return true;
+  });
+
   return (
     <nav
       className="mobile-nav-bar w-100 border-top d-flex d-md-none justify-content-around py-2 position-fixed bottom-0 start-0 z-3"
@@ -42,7 +50,7 @@ export function MobileNavBar() {
         borderColor: "var(--header-border)",
       }}
     >
-      {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
+      {allowedItems.map(({ path, label, icon: Icon }) => {
         const active = location.pathname === path;
 
         return (
