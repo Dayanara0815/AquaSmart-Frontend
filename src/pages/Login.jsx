@@ -78,10 +78,13 @@ export function Login({ onLoginSuccess }) {
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center min-vh-100 px-3"
+      className="d-flex align-items-center justify-content-center min-vh-100 px-3 text-white"
       style={{
         background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)",
         fontFamily: "'Inter', sans-serif",
+        color: "#ffffff",
+        "--text": "#ffffff",
+        "--muted": "rgba(255, 255, 255, 0.5)",
       }}
     >
       <div
@@ -122,8 +125,8 @@ export function Login({ onLoginSuccess }) {
           {/* Lado derecho - Login Form / Roles Select */}
           <div className="col-12 col-md-7 p-4 p-md-5 text-white d-flex flex-column justify-content-center">
             <div className="text-center text-md-start mb-4">
-              <h4 className="fw-bold mb-1">Iniciar Sesión</h4>
-              <p className="text-muted" style={{ fontSize: 13 }}>
+              <h4 className="fw-bold text-white mb-1">Iniciar Sesión</h4>
+              <p className="text-white-50" style={{ fontSize: 13 }}>
                 Selecciona un rol académico para interactuar con la plataforma AquaSmart.
               </p>
             </div>
@@ -143,7 +146,7 @@ export function Login({ onLoginSuccess }) {
                     key={user.email}
                     onClick={() => void handleLogin(user.email)}
                     disabled={loading}
-                    className="btn text-start border-0 rounded-4 p-3 d-flex align-items-center gap-3"
+                    className="btn text-start border-0 rounded-4 p-3 d-flex align-items-center gap-3 text-white"
                     style={{
                       background: "rgba(255, 255, 255, 0.03)",
                       border: "1px solid rgba(255, 255, 255, 0.05)",
@@ -181,7 +184,7 @@ export function Login({ onLoginSuccess }) {
                           {user.label}
                         </span>
                       </div>
-                      <p className="text-muted mb-0 mt-1" style={{ fontSize: 11, lineHeight: 1.4 }}>
+                      <p className="text-white-50 mb-0 mt-1" style={{ fontSize: 11, lineHeight: 1.4 }}>
                         {user.desc}
                       </p>
                     </div>
@@ -191,10 +194,10 @@ export function Login({ onLoginSuccess }) {
             </div>
 
             {/* Formulario alternativo por credenciales */}
-            <div className="d-flex align-items-center gap-2 my-2 text-muted" style={{ fontSize: 12 }}>
-              <hr className="flex-fill border-secondary" />
+            <div className="d-flex align-items-center gap-2 my-2 text-white-50" style={{ fontSize: 12 }}>
+              <hr className="flex-fill border-light opacity-25" />
               <span>O INGRESA CON CORREO</span>
-              <hr className="flex-fill border-secondary" />
+              <hr className="flex-fill border-light opacity-25" />
             </div>
 
             <form onSubmit={handleSubmit} className="mt-2">
