@@ -44,7 +44,8 @@ export function Reportes() {
 
     const load = async () => {
       try {
-        const report = await api.getWeeklyReport(fromDate, toDate);
+        const userEmail = localStorage.getItem("userEmail");
+        const report = await api.getWeeklyReport(fromDate, toDate, userEmail);
         if (!active) return;
 
         setData({
@@ -115,16 +116,19 @@ export function Reportes() {
       doc.setFontSize(10);
       doc.text("INFORMACIÓN DE LA CUENTA", 18, 64);
 
+      const titularName = data.titularName || localStorage.getItem("userFullName") || "María Fernanda Quispe Rojas";
+      const medidorId = data.medidorId || "ASM-2048";
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9.5);
       doc.text("Titular:", 18, 72);
       doc.setFont("helvetica", "bold");
-      doc.text("María Fernanda Quispe Rojas", 45, 72);
+      doc.text(titularName, 45, 72);
 
       doc.setFont("helvetica", "normal");
       doc.text("Código Medidor:", 18, 78);
       doc.setFont("helvetica", "bold");
-      doc.text("ASM-2048", 45, 78);
+      doc.text(medidorId, 45, 78);
 
       doc.setFont("helvetica", "normal");
       doc.text("Dirección:", 18, 84);
