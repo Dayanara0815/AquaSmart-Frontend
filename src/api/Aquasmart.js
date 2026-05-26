@@ -117,6 +117,31 @@ export const api = {
       body: JSON.stringify({ theme }),
     }),
 
+  // POST /user/register
+  registerUser: (userData) =>
+    request("/user/register", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }),
+
+  updateProfilePicture: (email, fotoPerfil) =>
+    request("/user/profile-picture", {
+      method: "POST",
+      body: JSON.stringify({ email, fotoPerfil }),
+    }),
+
+  reportMunicipalLeak: (location) =>
+    request("/alerts/municipal", {
+      method: "POST",
+      body: JSON.stringify({ location }),
+    }),
+
+  updateAlertStatus: (id, status) =>
+    request(`/alerts/${id}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    }),
+
 
   // GET /alerts/{index}
   // Obtiene el detalle de una alerta específica.
@@ -132,10 +157,11 @@ export const api = {
 
   // GET /reports/weekly
   // Obtiene el historial semanal de consumo.
-  getWeeklyReport: (from, to) => {
+  getWeeklyReport: (from, to, email) => {
     const params = new URLSearchParams();
     if (from) params.set("from", from);
     if (to) params.set("to", to);
+    if (email) params.set("email", email);
     const suffix = params.toString() ? `?${params.toString()}` : "";
     return request(`/reports/weekly${suffix}`);
   },
@@ -180,9 +206,9 @@ export const api = {
 
   // POST /ai/chat
   // Envía una pregunta a la IA.
-  askAI: (question) =>
+  askAI: (question, email) =>
     request("/ai/chat", {
       method: "POST",
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, email }),
     }),
 };
