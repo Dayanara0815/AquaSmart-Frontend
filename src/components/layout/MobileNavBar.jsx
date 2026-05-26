@@ -34,11 +34,12 @@ export function MobileNavBar() {
 
   return (
     <nav
-      className="mobile-nav-bar w-100 border-top bg-white d-flex d-md-none justify-content-around py-2 position-fixed bottom-0 start-0 z-3"
+      className="mobile-nav-bar w-100 border-top d-flex d-md-none justify-content-around py-2 position-fixed bottom-0 start-0 z-3"
       style={{
         boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.05)",
         backdropFilter: "blur(8px)",
-        background: "rgba(255, 255, 255, 0.95)",
+        background: "var(--surface)",
+        borderColor: "var(--header-border)",
       }}
     >
       {NAV_ITEMS.map(({ path, label, icon: Icon }) => {

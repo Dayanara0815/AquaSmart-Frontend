@@ -121,11 +121,11 @@ export function Dashboard() {
     };
 
     return (
-      <main className="flex-fill overflow-auto p-3 p-md-4 text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <main className="flex-fill overflow-auto p-3 p-md-4" style={{ fontFamily: "'Inter', sans-serif" }}>
         {/* Encabezado */}
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div>
-            <h4 className="fw-bold text-white mb-1">Panel de Auditoría Técnica de Campo</h4>
+            <h4 className="fw-bold mb-1">Panel de Auditoría Técnica de Campo</h4>
             <p className="text-muted mb-0" style={{ fontSize: 13 }}>
               Técnico asignado: <strong>Carlos Mendoza</strong> | Distrito: Puente Piedra
             </p>
@@ -138,7 +138,7 @@ export function Dashboard() {
         {/* KPIs Técnicos */}
         <div className="row g-3 mb-4">
           <div className="col-12 col-md-4">
-            <div className="card border-0 rounded-4 p-3 shadow-sm text-white" style={{ backgroundColor: "rgba(30, 41, 59, 0.7)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div className="card border rounded-4 p-3 shadow-sm">
               <div className="d-flex align-items-center gap-3">
                 <div className="rounded-3 p-2 bg-success-subtle text-success">
                   <Activity size={24} />
@@ -151,7 +151,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="col-12 col-md-4">
-            <div className="card border-0 rounded-4 p-3 shadow-sm text-white" style={{ backgroundColor: "rgba(30, 41, 59, 0.7)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div className="card border rounded-4 p-3 shadow-sm">
               <div className="d-flex align-items-center gap-3">
                 <div className="rounded-3 p-2 bg-danger-subtle text-danger">
                   <AlertTriangle size={24} />
@@ -164,7 +164,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="col-12 col-md-4">
-            <div className="card border-0 rounded-4 p-3 shadow-sm text-white" style={{ backgroundColor: "rgba(30, 41, 59, 0.7)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div className="card border rounded-4 p-3 shadow-sm">
               <div className="d-flex align-items-center gap-3">
                 <div className="rounded-3 p-2 bg-primary-subtle text-primary">
                   <FileText size={24} />
@@ -181,15 +181,15 @@ export function Dashboard() {
         <div className="row g-4">
           {/* Módulo 1: Auditoría de Reclamación Activa */}
           <div className="col-12 col-lg-7">
-            <div className="card border-0 rounded-4 p-4 text-white h-100" style={{ backgroundColor: "rgba(30, 41, 59, 0.7)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div className="card border rounded-4 p-4 h-100">
               <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
                 <FileText size={20} className="text-primary" />
                 Auditoría y Resolución de Reclamaciones (LegalTech)
               </h5>
               
-              <div className="rounded-4 p-3 mb-4" style={{ backgroundColor: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+              <div className="rounded-4 p-3 mb-4" style={{ backgroundColor: "var(--surface-soft)", border: "1px solid var(--header-border)" }}>
                 <div className="d-flex align-items-center justify-content-between mb-2">
-                  <span className="fw-bold text-white" style={{ fontSize: 14 }}>
+                  <span className="fw-bold" style={{ fontSize: 14 }}>
                     Titular: María Fernanda Quispe Rojas
                   </span>
                   <span 
@@ -207,9 +207,9 @@ export function Dashboard() {
 
                 {/* Evidencia del sensor */}
                 <div className="table-responsive mb-3">
-                  <table className="table table-dark table-sm table-borderless mb-0 text-white" style={{ fontSize: 11 }}>
+                  <table className="table table-sm table-borderless mb-0" style={{ fontSize: 11, color: "var(--text)" }}>
                     <thead>
-                      <tr className="text-muted border-bottom border-secondary">
+                      <tr className="text-muted border-bottom" style={{ borderColor: "var(--header-border)" }}>
                         <th>Tipo de Evento</th>
                         <th>Duración</th>
                         <th>Volumen Registrado</th>
@@ -237,9 +237,9 @@ export function Dashboard() {
                     Validar Evidencia y Aprobar Refacturación
                   </button>
                 ) : (
-                  <div className="alert alert-success py-2 px-3 rounded-3 d-flex align-items-center gap-2 border-0" style={{ fontSize: 12.5, backgroundColor: "rgba(16, 185, 129, 0.15)" }}>
+                  <div className="alert alert-success py-2 px-3 rounded-3 d-flex align-items-center gap-2" style={{ fontSize: 12.5 }}>
                     <CheckCircle2 size={18} className="text-success" />
-                    <span className="text-white">
+                    <span>
                       <strong>✓ Evidencia validada:</strong> Se ha generado un crédito de <strong>S/. 23.50</strong> a favor de la usuaria en su siguiente facturación.
                     </span>
                   </div>
@@ -250,7 +250,7 @@ export function Dashboard() {
 
           {/* Módulo 2: Estado de Medidores del Distrito */}
           <div className="col-12 col-lg-5">
-            <div className="card border-0 rounded-4 p-4 text-white h-100" style={{ backgroundColor: "rgba(30, 41, 59, 0.7)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div className="card border rounded-4 p-4 h-100">
               <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
                 <Activity size={20} className="text-primary" />
                 Medidores en Línea (Puente Piedra)
@@ -262,12 +262,12 @@ export function Dashboard() {
                     key={meter.id} 
                     className="p-3 rounded-4" 
                     style={{ 
-                      backgroundColor: "rgba(255, 255, 255, 0.02)", 
-                      border: "1px solid rgba(255, 255, 255, 0.05)" 
+                      backgroundColor: "var(--surface-soft)", 
+                      border: "1px solid var(--header-border)" 
                     }}
                   >
                     <div className="d-flex align-items-center justify-content-between mb-1">
-                      <span className="fw-bold text-white" style={{ fontSize: 13 }}>{meter.id}</span>
+                      <span className="fw-bold" style={{ fontSize: 13 }}>{meter.id}</span>
                       <span 
                         className={`badge ${
                           meter.status === "Óptimo" 
@@ -285,8 +285,8 @@ export function Dashboard() {
                       📍 {meter.address}
                     </p>
                     <div className="d-flex align-items-center justify-content-between" style={{ fontSize: 11 }}>
-                      <span className="text-muted">Caudal: <strong className="text-white">{meter.flow}</strong></span>
-                      <span className="text-muted">Presión: <strong className="text-white">{meter.pressure}</strong></span>
+                      <span className="text-muted">Caudal: <strong>{meter.flow}</strong></span>
+                      <span className="text-muted">Presión: <strong>{meter.pressure}</strong></span>
                     </div>
                   </div>
                 ))}
@@ -319,11 +319,11 @@ export function Dashboard() {
     };
 
     return (
-      <main className="flex-fill overflow-auto p-3 p-md-4 text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <main className="flex-fill overflow-auto p-3 p-md-4" style={{ fontFamily: "'Inter', sans-serif" }}>
         {/* Encabezado */}
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div>
-            <h4 className="fw-bold text-white mb-1">Dashboard Municipal de Vigilancia Ciudadana</h4>
+            <h4 className="fw-bold mb-1">Dashboard Municipal de Vigilancia Ciudadana</h4>
             <p className="text-muted mb-0" style={{ fontSize: 13 }}>
               Gestor municipal: <strong>Alexis Maza</strong> | Distrito: Puente Piedra
             </p>
@@ -334,20 +334,12 @@ export function Dashboard() {
         </div>
 
         {/* Alerta de rotura de matriz */}
-        <div 
-          className="alert border-0 rounded-4 p-3 mb-4 d-flex align-items-start gap-3"
-          style={{
-            background: "rgba(239, 68, 68, 0.15)",
-            border: "1px solid rgba(239, 68, 68, 0.25)",
-          }}
-        >
-          <div className="rounded-3 p-2 bg-danger text-danger d-flex align-items-center justify-content-center" style={{ color: "#ef4444", backgroundColor: "rgba(239, 68, 68, 0.1)" }}>
+        <div className="alert alert-danger border rounded-4 p-3 mb-4 d-flex align-items-start gap-3">
+          <div className="rounded-3 p-2 bg-danger-subtle text-danger d-flex align-items-center justify-content-center">
             <AlertTriangle size={22} className="animate-pulse" />
           </div>
           <div>
-            <h6 className="fw-bold mb-1" style={{ color: "#f87171" }}>
-              ⚠️ Alerta Crítica Vecinal: Posible Rotura de Matriz Detectada
-            </h6>
+            <h6 className="fw-bold mb-1">⚠️ Alerta Crítica Vecinal: Posible Rotura de Matriz Detectada</h6>
             <p className="mb-0 text-muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
               El algoritmo de correlación comunitaria reporta que **83% de los medidores en la Manzana 4 (Lotes 10-20)** de Puente Piedra reportan una caída de presión repentina a <strong>0.2 bar</strong> de forma simultánea. Se ha notificado automáticamente a las cuadrillas de reparación técnica de Sedapal.
             </p>
@@ -357,7 +349,7 @@ export function Dashboard() {
         <div className="row g-4">
           {/* Módulo 1: Mapa y Correlación */}
           <div className="col-12 col-lg-6">
-            <div className="card border-0 rounded-4 p-4 text-white h-100" style={{ backgroundColor: "rgba(30, 41, 59, 0.7)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div className="card border rounded-4 p-4 h-100">
               <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
                 <MapPin size={20} className="text-primary" />
                 Mapa de Correlación de Presión Cero
@@ -367,8 +359,8 @@ export function Dashboard() {
                 className="rounded-4 p-4 d-flex align-items-center justify-content-center flex-column gap-2 mb-2"
                 style={{
                   minHeight: 220,
-                  backgroundColor: "rgba(255, 255, 255, 0.02)",
-                  border: "1px dashed rgba(255, 255, 255, 0.1)",
+                  backgroundColor: "var(--surface-soft)",
+                  border: "1px dashed var(--header-border)",
                 }}
               >
                 <div className="d-flex gap-3 mb-2 flex-wrap justify-content-center">
@@ -394,7 +386,7 @@ export function Dashboard() {
 
           {/* Módulo 2: Registro de Fugas y Bacheo Vial */}
           <div className="col-12 col-lg-6">
-            <div className="card border-0 rounded-4 p-4 text-white h-100" style={{ backgroundColor: "rgba(30, 41, 59, 0.7)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div className="card border rounded-4 p-4 h-100">
               <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
                 <Activity size={20} className="text-primary" />
                 Reporte de Fugas en Vía Pública y Bacheo
@@ -406,12 +398,12 @@ export function Dashboard() {
                     key={leak.id} 
                     className="p-3 rounded-4" 
                     style={{ 
-                      backgroundColor: "rgba(255, 255, 255, 0.02)", 
-                      border: "1px solid rgba(255, 255, 255, 0.05)" 
+                      backgroundColor: "var(--surface-soft)", 
+                      border: "1px solid var(--header-border)" 
                     }}
                   >
                     <div className="d-flex align-items-center justify-content-between mb-1">
-                      <span className="fw-bold text-white" style={{ fontSize: 13 }}>{leak.location}</span>
+                      <span className="fw-bold" style={{ fontSize: 13 }}>{leak.location}</span>
                       <span className="badge bg-warning text-dark" style={{ fontSize: 9 }}>{leak.status}</span>
                     </div>
                     <p className="text-muted mb-0" style={{ fontSize: 11 }}>
@@ -428,10 +420,8 @@ export function Dashboard() {
                   value={newLeakLocation}
                   onChange={(e) => setNewLeakLocation(e.target.value)}
                   placeholder="ej: Av. Puente Piedra Cdra 5"
-                  className="form-control rounded-3 py-2 text-white border-0"
+                  className="form-control rounded-3 py-2"
                   style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.05)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
                     fontSize: 12.5,
                   }}
                 />
