@@ -179,6 +179,16 @@ header {
 }
 
 /* FLOATING AI ASSISTANT & CHAT DRAWER */
+.floating-ai-bubble {
+	position: fixed !important;
+	bottom: 85px;
+	right: 24px;
+	width: 56px;
+	height: 56px;
+	z-index: 1040;
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+
 .floating-ai-bubble:hover {
 	transform: scale(1.12) rotate(3deg);
 	box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4) !important;
@@ -186,6 +196,16 @@ header {
 
 .floating-ai-bubble:active {
 	transform: scale(0.95);
+}
+
+.chat-drawer-panel {
+	position: fixed !important;
+	bottom: 155px;
+	right: 24px;
+	width: 380px;
+	height: 520px;
+	z-index: 1040;
+	transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .chat-drawer-open {
@@ -198,6 +218,21 @@ header {
 	transform: translateY(30px) scale(0.92) !important;
 	opacity: 0 !important;
 	pointer-events: none !important;
+}
+
+@media (max-width: 576px) {
+	.chat-drawer-panel {
+		bottom: 75px !important;
+		right: 12px !important;
+		left: 12px !important;
+		width: auto !important;
+		height: calc(100% - 155px) !important;
+		max-height: 460px !important;
+	}
+	.floating-ai-bubble {
+		bottom: 75px !important;
+		right: 16px !important;
+	}
 }
 
 .typing-dot {
