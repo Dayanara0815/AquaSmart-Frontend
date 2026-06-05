@@ -1,85 +1,100 @@
-# 🖥️ AquaSmart - Frontend (Vite + React)
+<div align="center">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Recharts-3182BD?style=for-the-badge&logo=chartdotjs&logoColor=white" alt="Recharts" />
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3" />
+  <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white" alt="Render" />
+</div>
 
-¡Bienvenido al panel web de **AquaSmart**! Esta es una aplicación de interfaz interactiva y de diseño premium (glassmorphism, animaciones fluidas y soporte multi-tema) orientada a la monitorización inteligente y conservación del consumo de agua en tiempo real.
+<h1 align="center">🖥️ AquaSmart - Frontend (Panel Web de Control Hídrico)</h1>
 
----
+<p align="center">
+  Aplicación web interactiva, moderna y premium para la monitorización de telemetría, control de electroválvulas y auditoría técnica en AquaSmart.
+</p>
 
-## 🚀 Tecnologías Principales
-
-- **Core**: React 18 & Vite
-- **Gráficos**: Recharts (adaptable con visualizaciones animadas de costos y consumos en Soles)
-- **Documentación**: jsPDF & jsPDF-AutoTable (generación de boletas de consumo estructuradas)
-- **Estilos**: Vanilla CSS con un avanzado sistema de variables CSS dinámicas
-- **Herramientas**: ES Modules, ESLint, Fetch API
-
----
-
-## ✨ Características Principales
-
-1. **Monitoreo en Tiempo Real**: Panel de control interactivo que se actualiza automáticamente cada 5 segundos reportando caudal (L/min), volumen acumulado y costo monetario acumulado diario.
-2. **Interruptor de Válvula Inteligente**: Botón interactivo para abrir y cerrar la válvula de paso principal. Al cerrar, el flujo cae inmediatamente a `0.0 L/min` y se registra la lectura instantánea en base de datos.
-3. **Persistencia de Chat con IA**: Un asistente virtual contextual capaz de responder preguntas sobre tu recibo, consumo de agua o alertas de fugas sin perder el historial ante las recargas automáticas de telemetría.
-4. **Boleta PDF Premium**: Exportación de reportes semanales a un formato PDF corporativo de alto contraste, diseñado bajo estándares de accesibilidad WCAG.
-5. **Sistema de Temas Dinámico**: Soporte completo para Tema Oscuro y Tema Claro mediante contexto nativo de React, persistido automáticamente según las preferencias de cuenta del usuario.
+<div align="center">
+  <h3>
+    <a href="https://aquasmart-1vhz.onrender.com">🚀 VER APLICACIÓN EN VIVO (DEPLOY EN RENDER)</a>
+  </h3>
+</div>
 
 ---
 
-## 🛠️ Requisitos de Entorno
+## 🌟 Sobre el Proyecto
 
-Asegúrate de tener instalado en tu máquina local:
-- [Node.js](https://nodejs.org/) (Versión 18.0 o superior recomendada)
-- Un gestor de paquetes de Node como `npm` (incluido por defecto con Node.js)
+El frontend de **AquaSmart** es una interfaz web de diseño sofisticado y premium construida con **React 18** y **Vite**. Incorpora efectos de *glassmorphism*, micro-animaciones fluidas y soporte multi-tema (claro/oscuro) adaptándose visualmente de forma impecable en computadoras y dispositivos móviles. Está diseñado bajo estándares WCAG para garantizar la legibilidad e interconexión fluida con la API del backend.
 
 ---
 
-## ⚙️ Configuración y Despliegue Local
+## ✨ Funcionalidades Principales
 
-Sigue estos sencillos pasos para levantar el entorno de desarrollo local:
+La interfaz cuenta con cuatro perfiles de usuario dinámicos (Vecino Doméstico, Comercio, Técnico de Campo y Gestor Municipal).
 
-### 1. Clonar el repositorio y acceder a la carpeta
+### 📊 Dashboard Residencial y Comercial
+- **Métricas en Vivo:** Visualización del caudal actual (`L/min`), volumen acumulado diario (`L`) y costo monetario proyectado en tiempo real.
+- **Control de Válvula & Presencia:** Conmutadores interactivos para abrir la válvula, notificar presencia en casa y activar la preferencia de **Cierre automático por fuga**.
+- **Gráficos de Proyección IA:** Barras interactivas de Recharts sin ruido visual que detallan costos base y recargos por fugas de agua.
+
+### 🤖 AquaBot (Chat con IA)
+- **Cajón de Chat Responsivo:** Caja flotante optimizada para móviles que mantiene una conversación fluida y con memoria del historial en base de datos.
+- **Sugerencias contextuales:** Chips con preguntas rápidas y guiadas basadas en el rol del usuario logueado.
+
+### 👷 Panel de Trabajo JIRA (Técnico de Campo)
+- **Tablero Kanban Interactivo:** Organización de tareas técnicas en 4 columnas.
+- **Auditoría LegalTech:** Checklist interactivo obligatorio de tres pasos para habilitar el recálculo y la refacturación digital en el inspector de tickets.
+
+### 📅 Calendario Municipal (Gestor)
+- **Cronograma de Cortes:** Cuadrícula de fechas con puntos de colores adaptativos que indican incidentes y permiten programar mantenimientos de la red.
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+- **Framework:** React 18 & Vite
+- **Visualización de Datos:** Recharts (SVG animados)
+- **Generación de Reportes:** jsPDF & jsPDF-AutoTable
+- **Estilos:** Vanilla CSS y Variables CSS dinámicas
+- **Despliegue:** Render (Static Site)
+
+---
+
+## 🚀 Despliegue Local (Para Desarrolladores)
+
+Si deseas levantar el frontend localmente en tu máquina:
+
+1. **Clonar el repositorio:**
 ```bash
-git clone <url-del-repositorio>
-cd Frontend
+git clone https://github.com/Dayanara0815/AquaSmart.git
+cd AquaSmart/Frontend
 ```
 
-### 2. Instalar dependencias
-Instala todas las dependencias necesarias de Node.js especificadas en el archivo `package.json`:
+2. **Instalar dependencias:**
 ```bash
 npm install
 ```
 
-### 3. Configurar variables de entorno (Opcional)
-Por defecto, el frontend se conectará al backend local en `http://localhost:8080/api`. Si deseas modificar el endpoint de la API, puedes crear un archivo `.env` en la raíz de la carpeta `Frontend`:
+3. **Configurar Variables de Entorno (Opcional):**
+Crea un archivo `.env` en la raíz de la carpeta `Frontend`:
 ```env
 VITE_API_URL=http://localhost:8080/api
 ```
 
-### 4. Ejecutar el servidor de desarrollo
-Levanta el servidor rápido de Vite en modo local:
+4. **Ejecutar el servidor local de desarrollo:**
 ```bash
 npm run dev
 ```
-La terminal te proporcionará la dirección local. Por defecto, abre tu navegador en:
-👉 [**http://localhost:5173/**](http://localhost:5173/)
-
-### 5. Compilar para producción (Opcional)
-Si deseas generar los recursos optimizados y minificados listos para desplegar:
-```bash
-npm run build
-```
-Los archivos de distribución listos para subir a producción se crearán en la carpeta `/dist`.
+Navega a `http://localhost:5173/` en tu navegador.
 
 ---
 
-## 📁 Estructura de Carpetas Clave
+## 🔑 Despliegue en Producción (Render)
 
-```text
-src/
-├── api/             # Cliente de conexión fetch con el Backend
-├── components/      # Componentes UI reutilizables y secciones del Dashboard
-├── contexts/        # Contextos globales de React (Tema y usuario conectado)
-├── hooks/           # Custom Hooks para telemetría y consultas periódicas
-├── pages/           # Vistas principales (Dashboard, Ajustes, Reportes, Cierres, Notificaciones)
-├── App.jsx          # Enrutador principal y cargador de layouts
-└── index.css        # Configuración del sistema de diseño (tokens HSL, temas)
-```
+Al configurar tu **Static Site** en Render apuntando al subdirectorio `Frontend`, establece las siguientes variables de entorno:
+
+| Key | Value (Ejemplo de Producción) |
+| :--- | :--- |
+| **`VITE_API_URL`** | `https://aquasmart-backend-5wfp.onrender.com/api` |
+
+Y configura el proceso de construcción con:
+- **Build Command:** `npm run build`
+- **Publish Directory:** `dist`
