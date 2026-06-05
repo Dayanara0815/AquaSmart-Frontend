@@ -43,7 +43,7 @@ function WaterGauge({ liters, maxLiters = 300 }) {
 }
 
 // Card principal
-export function WaterStatusCard({ data, onToggleValve, onTogglePresence }) {
+export function WaterStatusCard({ data, onToggleValve, onTogglePresence, onToggleAutoClose }) {
   return (
     <div className="card border rounded-4 p-4 h-100">
       {/* Estado */}
@@ -124,6 +124,22 @@ export function WaterStatusCard({ data, onToggleValve, onTogglePresence }) {
           </span>
 
           <Toggle checked={data.isHome} onChange={onTogglePresence} />
+        </div>
+
+        {/* Toggle auto cierre */}
+        <div className="d-flex align-items-center justify-content-between">
+          <span style={{ fontSize: 13 }} className="text-muted">
+            Cierre auto. por fuga:{" "}
+            <span style={{ color: "var(--text)" }}>
+              {!data.isHome ? "Activado (Forzado)" : (data.autoCierreFuga ? "Sí" : "No")}
+            </span>
+          </span>
+
+          <Toggle
+            checked={!data.isHome ? true : data.autoCierreFuga}
+            onChange={onToggleAutoClose}
+            disabled={!data.isHome}
+          />
         </div>
 
         {/* Última actualización */}

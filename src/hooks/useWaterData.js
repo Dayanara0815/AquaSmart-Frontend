@@ -8,6 +8,7 @@ const FALLBACK = {
   currentFlow: 0.0,
   valveOpen: true,
   isHome: true,
+  autoCierreFuga: true,
   lastUpdated: "Hace 5 minutos",
   alert: {
     active: true,
@@ -43,6 +44,7 @@ function normalizeStatus(status, previous = FALLBACK) {
     currentFlow: Number(status.currentFlow ?? previous.currentFlow),
     valveOpen: Boolean(status.valveOpen ?? previous.valveOpen),
     isHome: Boolean(status.isHome ?? previous.isHome),
+    autoCierreFuga: Boolean(status.autoCierreFuga ?? previous.autoCierreFuga),
     lastUpdated: status.lastUpdated ?? previous.lastUpdated,
     alert: status.alert ?? previous.alert,
     aiProjection: status.aiProjection ?? previous.aiProjection,
@@ -66,9 +68,10 @@ export function useWaterData() {
     }
 
     try {
+      const email = localStorage.getItem("userEmail");
       const [statusResult, projectionResult, alertsResult] = await Promise.allSettled([
-        api.getWaterStatus(),
-        api.getAIProjection(),
+        api.getWaterStatus(email),
+        api.getAIProjection(email),
         api.getAlerts(),
       ]);
 
@@ -113,9 +116,10 @@ export function useWaterData() {
 
   const toggleValve = async () => {
     const nextOpen = !data.valveOpen;
+    const email = localStorage.getItem("userEmail");
 
     try {
-      const response = await api.setValve(nextOpen);
+      const response = await api.setValve(nextOpen, email);
       setData((current) => ({
         ...current,
         valveOpen: response?.open ?? nextOpen,
@@ -129,12 +133,30 @@ export function useWaterData() {
 
   const togglePresence = async () => {
     const nextHome = !data.isHome;
+    const email = localStorage.getItem("userEmail");
 
     try {
-      const response = await api.setHomePresence(nextHome);
+      const response = await api.setHomePresence(nextHome, email);
       setData((current) => ({
         ...current,
         isHome: response?.home ?? nextHome,
+        lastUpdated: response?.timestamp ?? current.lastUpdated,
+      }));
+      setError(null);
+    } catch (err) {
+      setError(getFriendlyError(err));
+    }
+  };
+
+  const toggleAutoClose = async () => {
+    const nextAutoClose = !data.autoCierreFuga;
+    const email = localStorage.getItem("userEmail");
+
+    try {
+      const response = await api.setAutoClose(nextAutoClose, email);
+      setData((current) => ({
+        ...current,
+        autoCierreFuga: response?.autoClose ?? nextAutoClose,
         lastUpdated: response?.timestamp ?? current.lastUpdated,
       }));
       setError(null);
@@ -176,6 +198,7 @@ export function useWaterData() {
     error,
     toggleValve,
     togglePresence,
+    toggleAutoClose,
     askAI,
     refresh: fetchData,
   };
