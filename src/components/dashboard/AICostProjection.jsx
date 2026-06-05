@@ -30,23 +30,25 @@ export function AICostProjection({ projection, onAskAI }) {
   };
   const LITER_TO_PEN = 0.005; // S/. 5.0 per m3 / 1000 liters
 
-  const realConsumption = projection.realConsumption || 0;
-  const leakDetected = projection.leakDetected || 8;
-  const baseConsumption = projection.baseConsumption || 0;
-  const leakEstimate = projection.leakEstimate || 0;
+  const realConsumption = projection.realConsumption ?? 0;
+  const leakDetected = projection.leakDetected ?? 0;
+  const baseConsumption = projection.baseConsumption ?? 0;
+  const leakEstimate = projection.leakEstimate ?? 0;
 
   const chartData = [
     {
       name: "REAL CONSUMO",
       sub: "actual",
       base: realConsumption * LITER_TO_PEN,
-      fuga: leakDetected * LITER_TO_PEN,
+      fuga: (leakDetected * LITER_TO_PEN) || 0.000001,
+      total: (realConsumption + leakDetected) * LITER_TO_PEN,
     },
     {
       name: "PRONÓSTICO IA",
       sub: "end month",
       base: baseConsumption * LITER_TO_PEN,
-      fuga: leakEstimate * LITER_TO_PEN,
+      fuga: (leakEstimate * LITER_TO_PEN) || 0.000001,
+      total: (baseConsumption + leakEstimate) * LITER_TO_PEN,
     },
   ];
 
@@ -101,10 +103,28 @@ export function AICostProjection({ projection, onAskAI }) {
         <ResponsiveContainer>
           <BarChart
             data={chartData}
-            margin={{ top: 30, right: 20, left: 20, bottom: 10 }}
+            margin={{ top: 35, right: 20, left: 20, bottom: 10 }}
             barSize={90}
           >
-            <CartesianGrid vertical={false} stroke="color-mix(in srgb, var(--muted) 25%, transparent)" />
+            <defs>
+              <linearGradient id="colorRealBase" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.95}/>
+                <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.35}/>
+              </linearGradient>
+              <linearGradient id="colorRealFuga" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.95}/>
+                <stop offset="100%" stopColor="#fca5a5" stopOpacity={0.35}/>
+              </linearGradient>
+              <linearGradient id="colorIABase" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity={0.95}/>
+                <stop offset="100%" stopColor="#86efac" stopOpacity={0.35}/>
+              </linearGradient>
+              <linearGradient id="colorIAFuga" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f97316" stopOpacity={0.95}/>
+                <stop offset="100%" stopColor="#fb923c" stopOpacity={0.35}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="color-mix(in srgb, var(--header-border) 60%, transparent)" />
             <XAxis
               dataKey="name"
               axisLine={false}
@@ -138,46 +158,80 @@ export function AICostProjection({ projection, onAskAI }) {
             />
             <YAxis hide />
             <Tooltip
-              contentStyle={{
-                borderRadius: 12,
-                border: "none",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+              cursor={false}
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  const baseVal = payload[0]?.value || 0;
+                  const fugaVal = payload[1]?.value || 0;
+                  const totalVal = baseVal + fugaVal;
+                  const isIA = label?.includes("IA") || label?.includes("PRONÓSTICO");
+                  return (
+                    <div
+                      className="p-3 rounded-4 shadow-lg border"
+                      style={{
+                        background: "var(--surface)",
+                        backdropFilter: "blur(12px)",
+                        borderColor: "var(--header-border)",
+                        color: "var(--text)",
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: "12px",
+                        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
+                      }}
+                    >
+                      <div className="fw-bold mb-2 border-bottom pb-1" style={{ borderColor: "var(--header-border)", fontSize: "11px", letterSpacing: "0.5px" }}>
+                        {label}
+                      </div>
+                      <div className="d-flex flex-column gap-2">
+                        <div className="d-flex justify-content-between align-items-center gap-4">
+                          <span className="text-muted d-flex align-items-center gap-1.5">
+                            <span className="rounded-circle" style={{ width: 8, height: 8, backgroundColor: isIA ? "#10b981" : "#3b82f6" }} />
+                            Consumo Base:
+                          </span>
+                          <span className="fw-bold">S/. {baseVal.toFixed(2)}</span>
+                        </div>
+                        {fugaVal >= 0.01 && (
+                          <div className="d-flex justify-content-between align-items-center gap-4">
+                            <span className="text-muted d-flex align-items-center gap-1.5">
+                              <span className="rounded-circle" style={{ width: 8, height: 8, backgroundColor: isIA ? "#f97316" : "#ef4444" }} />
+                              Fuga/Pérdidas:
+                            </span>
+                            <span className="fw-semibold text-danger">S/. {fugaVal.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="d-flex justify-content-between align-items-center gap-4 border-top pt-2 mt-1 fw-bold" style={{ borderColor: "var(--header-border)" }}>
+                          <span>Total Estimado:</span>
+                          <span className="text-primary" style={{ fontSize: "13px" }}>S/. {totalVal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
               }}
-              formatter={(value) => [`S/. ${Number(value).toFixed(2)}`]}
             />
 
             <Bar dataKey="base" stackId="a" radius={[0, 0, 10, 10]}>
-              <Cell fill={COLORS.real_base} />
-              <Cell fill={COLORS.ia_base} />
-              <LabelList
-                dataKey="base"
-                position="center"
-                formatter={(v) => `S/. ${Number(v).toFixed(2)}`}
-                style={{ fontSize: 10, fontWeight: 600, fill: "#1e3a8a" }}
-              />
+              <Cell fill="url(#colorRealBase)" />
+              <Cell fill="url(#colorIABase)" />
             </Bar>
 
             <Bar
               dataKey="fuga"
               stackId="a"
               radius={[10, 10, 0, 0]}
-              label={{
-                position: "top",
-                formatter: (value, entry) =>
-                  `S/. ${((entry?.base || 0) + value).toFixed(2)}`,
-                fontSize: 13,
-                fontWeight: 600,
-                fill: "var(--text)",
-                offset: 8,
-              }}
             >
-              <Cell fill={COLORS.real_fuga} />
-              <Cell fill={COLORS.ia_fuga} />
+              <Cell fill="url(#colorRealFuga)" />
+              <Cell fill="url(#colorIAFuga)" />
               <LabelList
-                dataKey="fuga"
-                position="center"
-                formatter={(v) => `S/. ${Number(v).toFixed(2)}`}
-                style={{ fontSize: 10, fontWeight: 600, fill: "#7f1d1d" }}
+                dataKey="total"
+                position="top"
+                formatter={(v) => v > 0 ? `S/. ${Number(v).toFixed(2)}` : ""}
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  fill: "var(--text)",
+                }}
+                offset={8}
               />
             </Bar>
           </BarChart>

@@ -84,20 +84,29 @@ export const api = {
 
   // GET /water/status
   // Obtiene estado del agua.
-  getWaterStatus: () =>
-    request("/water/status"),
+  getWaterStatus: (email) => {
+    const suffix = email ? `?email=${encodeURIComponent(email)}` : "";
+    return request(`/water/status${suffix}`);
+  },
 
 
   // GET /ai/projection
   // Obtiene proyección o análisis IA.
-  getAIProjection: () =>
-    request("/ai/projection"),
+  getAIProjection: (email) => {
+    const suffix = email ? `?email=${encodeURIComponent(email)}` : "";
+    return request(`/ai/projection${suffix}`);
+  },
 
 
   // GET /alerts
   // Obtiene alertas del sistema.
   getAlerts: () =>
     request("/alerts"),
+
+  // GET /water/medidores
+  // Obtiene lista de medidores y sensores reales.
+  getMedidores: () =>
+    request("/water/medidores"),
 
   // GET /user/current
   // Obtiene información básica del usuario (titular) conectado.
@@ -130,11 +139,13 @@ export const api = {
       body: JSON.stringify({ email, fotoPerfil }),
     }),
 
-  reportMunicipalLeak: (location) =>
-    request("/alerts/municipal", {
+  reportMunicipalLeak: (payload) => {
+    const body = typeof payload === "string" ? { location: payload } : payload;
+    return request("/alerts/municipal", {
       method: "POST",
-      body: JSON.stringify({ location }),
-    }),
+      body: JSON.stringify(body),
+    });
+  },
 
   updateAlertStatus: (id, status) =>
     request(`/alerts/${id}/status`, {
@@ -186,29 +197,42 @@ export const api = {
   // PUT /water/valve
   // Cambia estado de la válvula.
   // open puede ser true o false.
-  setValve: (open) =>
-    request("/water/valve", {
+  setValve: (open, email) => {
+    const suffix = email ? `?email=${encodeURIComponent(email)}` : "";
+    return request(`/water/valve${suffix}`, {
       method: "PUT",
-
-      // Convierte objeto JS a JSON.
       body: JSON.stringify({ open }),
-    }),
+    });
+  },
 
 
   // PUT /water/presence
   // Indica si hay personas en casa.
-  setHomePresence: (home) =>
-    request("/water/presence", {
+  setHomePresence: (home, email) => {
+    const suffix = email ? `?email=${encodeURIComponent(email)}` : "";
+    return request(`/water/presence${suffix}`, {
       method: "PUT",
       body: JSON.stringify({ home }),
-    }),
+    });
+  },
+
+
+  // PUT /water/autoclose
+  // Configura si se debe cerrar automáticamente la válvula por fugas cuando se está en casa.
+  setAutoClose: (autoClose, email) => {
+    const suffix = email ? `?email=${encodeURIComponent(email)}` : "";
+    return request(`/water/autoclose${suffix}`, {
+      method: "PUT",
+      body: JSON.stringify({ autoClose }),
+    });
+  },
 
 
   // POST /ai/chat
   // Envía una pregunta a la IA.
-  askAI: (question, email) =>
+  askAI: (question, email, history) =>
     request("/ai/chat", {
       method: "POST",
-      body: JSON.stringify({ question, email }),
+      body: JSON.stringify({ question, email, history }),
     }),
 };

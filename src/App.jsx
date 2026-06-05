@@ -80,7 +80,7 @@ export default function App() {
             />
             <Route 
               path="/notificaciones" 
-              element={isDomestic ? <Notificaciones /> : <Navigate to="/" replace />} 
+              element={<Notificaciones />} 
             />
             <Route path="/ajustes" element={<Ajustes />} />
             <Route 

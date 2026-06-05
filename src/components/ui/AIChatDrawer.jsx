@@ -1,22 +1,64 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageSquare, X, Send, Sparkles, Droplets } from "lucide-react";
+import { MessageSquare, X, Send, Sparkles } from "lucide-react";
 import { api } from "../../api/Aquasmart";
+
+// Función para obtener sugerencias específicas según el rol
+const getSuggestions = (role) => {
+  if (role === "TECNICO") {
+    return [
+      "¿Cuál es el caudal actual del medidor?",
+      "¿Hay alertas activas en PostgreSQL?",
+      "¿Cuál es el estado de la válvula?",
+      "Explicar estado de órdenes JIRA",
+    ];
+  }
+  if (role === "MUNICIPAL") {
+    return [
+      "¿Hay alertas activas en el distrito?",
+      "¿Cómo están las lecturas del medidor?",
+      "¿Cuál es el estado de la válvula principal?",
+      "¿Se reportan fugas viales?",
+    ];
+  }
+  if (role === "COMERCIO") {
+    return [
+      "¿Cuál es mi consumo comercial hoy?",
+      "¿Tengo alertas activas?",
+      "¿Cuál es el estado de mi válvula?",
+      "¿Cuánto he ahorrado por paso de aire?",
+    ];
+  }
+  return [
+    "¿Cuánto he consumido hoy?",
+    "¿Cuál es el estado de mi válvula?",
+    "¿Tengo alertas activas?",
+    "¿Cuánto dinero he ahorrado por paso de aire?",
+  ];
+};
+
+// Función para armar el mensaje de bienvenida adaptativo por rol
+const getInitialMessage = (role) => {
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  let text = "¡Hola! Soy **AquaBot**, tu asistente virtual de AquaSmart. Estoy aquí para analizar tus consumos domésticos, alertarte de fugas y ayudarte a ahorrar agua. ¿En qué te puedo asesorar hoy?";
+  if (role === "TECNICO") {
+    text = "¡Hola! Soy **AquaBot (Consola Técnica)**. Estoy listo para ayudarte a auditar lecturas de medidores, analizar caudales y presiones en bar, y revisar tus órdenes de trabajo JIRA en PostgreSQL. ¿Qué sensor de Puente Piedra auditamos hoy?";
+  } else if (role === "MUNICIPAL") {
+    text = "¡Hola! Soy **AquaBot (Asistente Municipal)**. Estoy a tu disposición para correlacionar transductores de presión, ver baches reportados en vía pública y gestionar alertas comunitarias. ¿Qué zona distrital analizamos hoy?";
+  } else if (role === "COMERCIO") {
+    text = "¡Hola! Soy **AquaBot (Asistente Comercial)**. Estoy monitoreando la línea de tu lavandería para asegurar flujo constante de agua y evitar daños por sedimentos o bolsas de aire. ¿Deseas verificar tu consumo comercial hoy?";
+  }
+  return [{ sender: "bot", text, timestamp: time }];
+};
 
 export function AIChatDrawer() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([
-    {
-      sender: "bot",
-      text: "¡Hola! Soy **AquaBot**, tu asistente virtual de AquaSmart. Estoy aquí para analizar tus consumos, verificar el estado de tu válvula y ayudarte a ahorrar agua. ¿En qué te puedo asesorar hoy?",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef(null);
-
   const userEmail = localStorage.getItem("userEmail") || "";
   const userRole = localStorage.getItem("userRole") || "DOMESTICO";
+
+  const [messages, setMessages] = useState(() => getInitialMessage(userRole));
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
 
   // Desplazar automáticamente hacia el último mensaje
   const scrollToBottom = () => {
@@ -27,13 +69,7 @@ export function AIChatDrawer() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Sugerencias rápidas
-  const SUGGESTIONS = [
-    "¿Cuánto he consumido hoy?",
-    "¿Cuál es el estado de mi válvula?",
-    "¿Tengo alertas activas?",
-    "¿Cuánto dinero he ahorrado por paso de aire?",
-  ];
+  const SUGGESTIONS = getSuggestions(userRole);
 
   const handleSend = async (textToSend) => {
     const query = (textToSend || input).trim();
@@ -46,16 +82,22 @@ export function AIChatDrawer() {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     // 1. Agregar mensaje del usuario
-    setMessages((prev) => [
-      ...prev,
+    const nextMessages = [
+      ...messages,
       { sender: "user", text: query, timestamp: time },
-    ]);
-
+    ];
+    setMessages(nextMessages);
     setIsTyping(true);
 
+    // Formatear historial completo para la API (historial conversacional)
+    const historyPayload = nextMessages.map((m) => ({
+      sender: m.sender,
+      text: m.text,
+    }));
+
     try {
-      // 2. Consultar a la API contextual de Spring Boot
-      const res = await api.askAI(query, userEmail);
+      // 2. Consultar a la API contextual de Spring Boot con historial
+      const res = await api.askAI(query, userEmail, historyPayload);
       
       setIsTyping(false);
       
@@ -79,13 +121,6 @@ export function AIChatDrawer() {
     }
   };
 
-  // No renderizar para el Técnico o el Gestor Municipal si se desea restringir,
-  // pero el asistente es sumamente útil para todos. Vamos a dejarlo activo para todos,
-  // o limitarlo al Vecino/Comercio. Como cada rol es diferente, tenerlo para Vecino es el principal caso de uso.
-  if (userRole === "TECNICO" || userRole === "MUNICIPAL") {
-    return null;
-  }
-
   // Helper para renderizar texto con negritas markdown simples
   const renderMessageText = (text) => {
     const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -102,38 +137,26 @@ export function AIChatDrawer() {
       {/* Botón flotante */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="position-fixed d-flex align-items-center justify-content-center border-0 rounded-circle shadow-lg floating-ai-bubble"
+        className="d-flex align-items-center justify-content-center border-0 rounded-circle shadow-lg floating-ai-bubble"
         style={{
-          bottom: "85px",
-          right: "24px",
-          width: "56px",
-          height: "56px",
           background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)",
           color: "#fff",
-          zIndex: 1040,
-          transition: "transform 0.2s, box-shadow 0.2s",
         }}
         aria-label="Abrir asistente de IA"
         title="Pregunta a AquaBot IA"
       >
         {isOpen ? <X size={24} /> : <MessageSquare size={24} className="animate-bounce" />}
       </button>
-
+ 
       {/* Drawer de Chat */}
       <div
-        className={`position-fixed d-flex flex-column shadow-lg chat-drawer-panel rounded-4 overflow-hidden ${
+        className={`d-flex flex-column shadow-lg chat-drawer-panel rounded-4 overflow-hidden ${
           isOpen ? "chat-drawer-open" : "chat-drawer-closed"
         }`}
         style={{
-          bottom: "155px",
-          right: "24px",
-          width: "360px",
-          height: "460px",
           background: "var(--surface)",
           backdropFilter: "blur(12px)",
           border: "1px solid var(--header-border)",
-          zIndex: 1040,
-          transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
           boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
         }}
       >
@@ -173,8 +196,8 @@ export function AIChatDrawer() {
 
         {/* Historial de Mensajes */}
         <div 
-          className="flex-fill overflow-auto p-3 d-flex flex-column gap-3 bg-light bg-opacity-25"
-          style={{ maxHeight: "calc(100% - 130px)" }}
+          className="p-3 d-flex flex-column gap-3 bg-light bg-opacity-25"
+          style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto" }}
         >
           {messages.map((msg, index) => {
             const isBot = msg.sender === "bot";

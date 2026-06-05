@@ -35,7 +35,7 @@ export function MobileNavBar() {
 
   const allowedItems = NAV_ITEMS.filter(({ path }) => {
     if (userRole === "TECNICO" || userRole === "MUNICIPAL") {
-      return path === "/" || path === "/ajustes";
+      return path === "/" || path === "/ajustes" || path === "/notificaciones";
     }
     return true;
   });

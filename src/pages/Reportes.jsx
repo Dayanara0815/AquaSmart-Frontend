@@ -43,6 +43,13 @@ export function Reportes() {
     let active = true;
 
     const load = async () => {
+      if (fromDate && toDate && fromDate > toDate) {
+        setError("La fecha inicial ('Desde') no puede ser posterior a la fecha final ('Hasta')");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
         const userEmail = localStorage.getItem("userEmail");
         const report = await api.getWeeklyReport(fromDate, toDate, userEmail);
@@ -285,14 +292,6 @@ export function Reportes() {
     fill: item.anomaly ? "#ef4444" : "#3b82f6",
   }));
 
-  if (loading) {
-    return <div className="p-4 text-muted">Cargando reporte semanal...</div>;
-  }
-
-  if (error) {
-    return <div className="p-4 text-danger">Error al cargar reportes: {error}</div>;
-  }
-
   return (
     <div className="p-3 p-md-4">
       <div className="mb-4">
@@ -321,52 +320,109 @@ export function Reportes() {
         </div>
       </div>
 
-      <div className="row g-3 mb-4">
-        <div className="col-12 col-md-4">
-          <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
-            <div className="text-muted small">Consumo total</div>
-            <div className="display-6 fw-bold">{data.totalLiters.toFixed(1)} L</div>
+      {error && (
+        <div className="alert alert-danger rounded-4 p-4 mb-4 d-flex align-items-center gap-3 border-0 shadow-sm">
+          <span style={{ fontSize: "24px" }}>⚠️</span>
+          <div>
+            <h6 className="fw-bold mb-1" style={{ color: "#842029" }}>Error al cargar reporte</h6>
+            <span style={{ fontSize: "13px" }}>{error}</span>
           </div>
         </div>
-        <div className="col-12 col-md-4">
-          <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
-            <div className="text-muted small">Promedio diario</div>
-            <div className="display-6 fw-bold">{data.averageLiters.toFixed(1)} L</div>
-          </div>
-        </div>
-        <div className="col-12 col-md-4">
-          <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
-            <div className="text-muted small">Días anómalos</div>
-            <div className="display-6 fw-bold">{data.anomalyCount}</div>
-            <div className="text-muted small mt-2">Pico de consumo</div>
-            <div className="display-6 fw-bold">{data.peakLiters.toFixed(1)} L</div>
-            <div className="text-muted">{data.peakDay}</div>
-          </div>
-        </div>
-      </div>
+      )}
 
-      <div className="card border-0 shadow-sm rounded-4 p-4">
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <h5 className="mb-0 fw-semibold">Consumo por día</h5>
-          <span className="text-muted small">Rojos: día anómalo</span>
+      {loading && !error && (
+        <div className="text-center p-5 card border-0 shadow-sm rounded-4">
+          <div className="spinner-border text-primary mb-3" role="status" style={{ width: "3rem", height: "3rem" }}>
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+          <div className="text-muted">Cargando datos del reporte semanal...</div>
         </div>
+      )}
 
-        <div style={{ width: "100%", height: 340 }}>
-          <ResponsiveContainer>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="dayLabel" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="liters" radius={[8, 8, 0, 0]}>
-                {chartData.map((entry) => (
-                  <Cell key={entry.date} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {!loading && !error && (
+        <>
+          <div className="row g-3 mb-4">
+            <div className="col-12 col-md-4">
+              <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div className="text-muted small">Consumo total</div>
+                <div className="display-6 fw-bold">{data.totalLiters.toFixed(1)} L</div>
+              </div>
+            </div>
+            <div className="col-12 col-md-4">
+              <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div className="text-muted small">Promedio diario</div>
+                <div className="display-6 fw-bold">{data.averageLiters.toFixed(1)} L</div>
+              </div>
+            </div>
+            <div className="col-12 col-md-4">
+              <div className="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div className="text-muted small">Días anómalos</div>
+                <div className="display-6 fw-bold">{data.anomalyCount}</div>
+                <div className="text-muted small mt-2">Pico de consumo</div>
+                <div className="display-6 fw-bold">{data.peakLiters.toFixed(1)} L</div>
+                <div className="text-muted">{data.peakDay}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card border-0 shadow-sm rounded-4 p-4">
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h5 className="mb-0 fw-semibold">Consumo por día</h5>
+              <span className="text-muted small">Rojos: día anómalo</span>
+            </div>
+
+            <div style={{ width: "100%", height: 340 }}>
+              <ResponsiveContainer>
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorNormal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#2563eb" stopOpacity={0.85}/>
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                    </linearGradient>
+                    <linearGradient id="colorAnomaly" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9}/>
+                      <stop offset="100%" stopColor="#b91c1c" stopOpacity={0.2}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="color-mix(in srgb, var(--header-border) 60%, transparent)" />
+                  <XAxis 
+                    dataKey="dayLabel" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "var(--muted)", fontSize: 11, fontWeight: 500 }}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "var(--muted)", fontSize: 11, fontWeight: 500 }}
+                    tickFormatter={(v) => `${v}L`}
+                  />
+                  <Tooltip 
+                    cursor={false}
+                    contentStyle={{
+                      background: "var(--surface)",
+                      borderRadius: "16px",
+                      border: "1px solid var(--header-border)",
+                      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.12)",
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: "12.5px",
+                      color: "var(--text)"
+                    }}
+                    itemStyle={{ color: "var(--primary)" }}
+                    labelStyle={{ fontWeight: "bold", color: "var(--text)", marginBottom: "4px" }}
+                    formatter={(value) => [`${value.toFixed(1)} Litros`, "Consumo"]}
+                  />
+                  <Bar dataKey="liters" radius={[8, 8, 0, 0]} maxBarSize={55}>
+                    {chartData.map((entry) => (
+                      <Cell key={entry.date} fill={entry.anomaly ? "url(#colorAnomaly)" : "url(#colorNormal)"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
