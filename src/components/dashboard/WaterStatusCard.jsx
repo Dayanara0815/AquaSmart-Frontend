@@ -49,7 +49,7 @@ export function WaterStatusCard({ data, onToggleValve, onTogglePresence, onToggl
       {/* Estado */}
       <div className="text-center mb-2">
         <div className="d-flex align-items-center justify-content-center gap-2 mb-1">
-          <span className="text-muted" style={{ fontSize: 13 }}>
+          <span className="text-muted" style={{ fontSize: 14 }}>
             Estado:
           </span>
 
@@ -57,9 +57,9 @@ export function WaterStatusCard({ data, onToggleValve, onTogglePresence, onToggl
           <span
             className="badge rounded-pill px-3 py-2"
             style={{
-              backgroundColor: "#dcfce7",
-              color: "#15803d",
-              fontSize: 11,
+              backgroundColor: "#10B981",
+              color: "#ffffff",
+              fontSize: 14,
               fontWeight: 600,
             }}
           >

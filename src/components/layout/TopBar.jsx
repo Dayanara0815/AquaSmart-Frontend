@@ -64,8 +64,8 @@ export function TopBar({ user, onLogout, onMenuToggle }) {
       className="d-flex align-items-center justify-content-between"
       style={{
         minHeight: 72,
-        paddingLeft: 24,
-        paddingRight: 24,
+        paddingLeft: 30,
+        paddingRight: 30,
         paddingTop: 8,
         paddingBottom: 8,
       }}
@@ -144,8 +144,13 @@ export function TopBar({ user, onLogout, onMenuToggle }) {
             )}
           </div>
           <div className="d-flex flex-column align-items-start leading-tight">
-            <span className="fw-medium user-name" style={{ lineHeight: 1.2 }}>{displayName}</span>
-            <span className="badge text-uppercase p-0 mt-0.5" style={{ fontSize: 9, fontWeight: 600, color: "var(--primary)" }}>
+            <span className="fw-medium user-name" style={{ lineHeight: 1.2 }}>
+              {displayName}
+            </span>
+            <span
+              className="badge text-uppercase p-0 mt-0.5"
+              style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}
+            >
               {getRoleLabel(user?.role)}
             </span>
           </div>
@@ -158,7 +163,7 @@ export function TopBar({ user, onLogout, onMenuToggle }) {
             style={{ width: 36, height: 36 }}
             aria-label="Notificaciones"
           >
-            <Bell size={20} color="var(--muted)" />
+            <Bell size={20} color="var(--icons)" />
           </button>
           {alertCount > 0 && (
             <span
@@ -173,11 +178,11 @@ export function TopBar({ user, onLogout, onMenuToggle }) {
         {/* Botón Cerrar Sesión para móviles y tablets */}
         <button
           onClick={onLogout}
-          className="d-flex align-items-center justify-content-center border-0 rounded-circle bg-transparent p-0 text-danger"
+          className="d-flex align-items-center justify-content-center border-0 rounded-circle bg-transparent p-0"
           style={{ width: 36, height: 36 }}
           title="Cerrar Sesión"
         >
-          <LogOut size={20} />
+          <LogOut size={20} color="var(--icons)" />
         </button>
       </div>
     </header>
