@@ -66,7 +66,7 @@ export function Toggle({
         height: 24,
         borderRadius: 12,
         background: checked
-          ? "#3b82f6"
+          ? "#10B981"
           : "#d1d5db",
         position: "relative",
         cursor: disabled
