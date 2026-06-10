@@ -126,6 +126,13 @@ export const api = {
       body: JSON.stringify({ theme }),
     }),
 
+  // POST /user/login
+  loginUser: (email, password) =>
+    request("/user/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
   // POST /user/register
   registerUser: (userData) =>
     request("/user/register", {
