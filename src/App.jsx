@@ -43,6 +43,7 @@ export default function App() {
     localStorage.removeItem("userRole");
     localStorage.removeItem("userFullName");
     localStorage.removeItem("userFotoPerfil");
+    localStorage.removeItem("token");
     setUser(null);
     navigate("/");
   };
