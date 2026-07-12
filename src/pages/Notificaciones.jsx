@@ -155,6 +155,8 @@ export function Notificaciones() {
   const [sortBy, setSortBy] = useState("PRIORIDAD"); // PRIORIDAD | RECIENTES
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
+  const [showConfirmCloseModal, setShowConfirmCloseModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   const userRole = localStorage.getItem("userRole") || "DOMESTICO";
   const userEmail = localStorage.getItem("userEmail");
@@ -178,14 +180,34 @@ export function Notificaciones() {
     }
   };
 
-  const handleExecuteAction = async (alertId, actionType) => {
+  const confirmCloseValve = async () => {
+    setShowConfirmCloseModal(false);
+    if (!pendingAction) return;
     try {
       setActionLoading(true);
       setActionMessage("");
-      if (actionType === "CLOSE_VALVE") {
-        await api.setValve(false, userEmail);
-        setActionMessage("Electroválvula de emergencia cerrada con éxito.");
-      } else if (actionType === "MUNICIPAL_PROCESS") {
+      await api.setValve(false, userEmail);
+      setActionMessage("Electroválvula de emergencia cerrada con éxito.");
+    } catch (err) {
+      console.error("Error al cerrar la válvula", err);
+      setActionMessage("Error al intentar cerrar la electroválvula.");
+    } finally {
+      setActionLoading(false);
+      setPendingAction(null);
+    }
+  };
+
+  const handleExecuteAction = async (alertId, actionType) => {
+    if (actionType === "CLOSE_VALVE") {
+      setPendingAction({ alertId, actionType });
+      setShowConfirmCloseModal(true);
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      setActionMessage("");
+      if (actionType === "MUNICIPAL_PROCESS") {
         await api.updateAlertStatus(alertId, "En Proceso");
         setActionMessage("Orden de trabajo iniciada. Se asignó la cuadrilla municipal.");
       } else if (actionType === "MUNICIPAL_RESOLVE") {
@@ -655,6 +677,42 @@ export function Notificaciones() {
           </div>
         )}
       </div>
+
+      {/* Modal de Confirmación de Cierre de Válvula */}
+      {showConfirmCloseModal && (
+        <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 2000 }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style={{ background: "var(--surface)", color: "var(--text)", borderColor: "var(--header-border)" }}>
+              <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h5 className="modal-title fw-bold d-flex align-items-center gap-2" style={{ color: "var(--text)" }}>
+                  <AlertTriangle size={24} className="text-warning" />
+                  Confirmar Cierre de Emergencia
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close shadow-none" 
+                  onClick={() => setShowConfirmCloseModal(false)} 
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body px-4 py-3">
+                <p className="text-muted mb-0" style={{ fontSize: 14.5, lineHeight: 1.6 }}>
+                  ¿Estás seguro de que deseas <strong>cerrar la electroválvula de emergencia</strong>? 
+                  Esto cortará el flujo de agua inmediatamente para mitigar el incidente de seguridad hídrica.
+                </p>
+              </div>
+              <div className="modal-footer border-top-0 pt-0 pb-4 px-4 d-flex gap-2 justify-content-end">
+                <button type="button" className="btn btn-light px-4 py-2 rounded-3 fw-medium text-secondary" onClick={() => setShowConfirmCloseModal(false)}>
+                  Cancelar
+                </button>
+                <button type="button" className="btn btn-danger px-4 py-2 rounded-3 fw-semibold text-white" onClick={confirmCloseValve}>
+                  Sí, Cerrar Válvula
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
