@@ -275,3 +275,66 @@ header {
   font-size: 10px;
 }
 
+/* Animation for recording state in AI Assistant */
+@keyframes voicePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+.voice-record-pulse {
+  animation: voicePulse 1.5s infinite;
+  background-color: #dc3545 !important;
+}
+
+/* --- MODO DALTONISMO (Accesibilidad Visual) --- */
+.theme-daltonism {
+  --primary: #0072b2 !important;
+  --badge-bg: #d55e00 !important;
+  --avatar-bg: #0072b2 !important;
+  --warn-bg: #fefcf0 !important;
+  --warn-border: #f0e442 !important;
+  --warn-text: #b45309 !important;
+  --hover: #005a8c !important;
+}
+
+/* Modificadores de utilidad para Bootstrap */
+.theme-daltonism .text-success {
+  color: #009e73 !important;
+}
+.theme-daltonism .bg-success {
+  background-color: #009e73 !important;
+  color: #ffffff !important;
+}
+.theme-daltonism .text-danger {
+  color: #d55e00 !important;
+}
+.theme-daltonism .bg-danger {
+  background-color: #d55e00 !important;
+  color: #ffffff !important;
+}
+.theme-daltonism .text-warning {
+  color: #e69f00 !important;
+}
+.theme-daltonism .bg-warning {
+  background-color: #f0e442 !important;
+  color: #0f172a !important;
+}
+.theme-daltonism .btn-primary {
+  background-color: #0072b2 !important;
+  border-color: #0072b2 !important;
+}
+.theme-daltonism .btn-success {
+  background-color: #009e73 !important;
+  border-color: #009e73 !important;
+}
+.theme-daltonism .btn-danger {
+  background-color: #d55e00 !important;
+  border-color: #d55e00 !important;
+}

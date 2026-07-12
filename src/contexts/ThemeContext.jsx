@@ -4,6 +4,8 @@ import { api } from "../api/Aquasmart";
 export const ThemeContext = createContext({
   theme: "light",
   toggleTheme: () => {},
+  daltonismEnabled: false,
+  toggleDaltonism: () => {},
 });
 
 export function ThemeProvider({ children }) {
@@ -13,6 +15,15 @@ export function ThemeProvider({ children }) {
       return saved === "dark" ? "dark" : "light";
     } catch (e) {
       return "light";
+    }
+  });
+
+  const [daltonismEnabled, setDaltonismEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem("aquasmart:daltonism");
+      return saved === "true";
+    } catch (e) {
+      return false;
     }
   });
 
@@ -31,6 +42,20 @@ export function ThemeProvider({ children }) {
       root.classList.remove("theme-dark");
     }
   }, [theme]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("aquasmart:daltonism", String(daltonismEnabled));
+    } catch (e) {
+      // ignore
+    }
+    const root = document.documentElement;
+    if (daltonismEnabled) {
+      root.classList.add("theme-daltonism");
+    } else {
+      root.classList.remove("theme-daltonism");
+    }
+  }, [daltonismEnabled]);
 
   // On mount try to load preference from backend (if user has one)
   useEffect(() => {
@@ -62,8 +87,15 @@ export function ThemeProvider({ children }) {
     });
   };
 
+  const toggleDaltonism = (val) => {
+    setDaltonismEnabled((prev) => {
+      const nextVal = typeof val === "boolean" ? val : !prev;
+      return nextVal;
+    });
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, daltonismEnabled, toggleDaltonism }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -31,6 +31,11 @@ export function Dashboard() {
   const { data, loading, error, toggleValve, togglePresence, toggleAutoClose, askAI } = useWaterData();
   const [role, setRole] = useState("DOMESTICO");
   const [userName, setUserName] = useState("María Fernanda");
+  const [showConfirmCloseModal, setShowConfirmCloseModal] = useState(false);
+
+  const handleToggleValve = () => {
+    setShowConfirmCloseModal(true);
+  };
 
   // Estado para la simulación interactiva del Técnico
   const [claimStatus, setClaimStatus] = useState("Pendiente"); // Pendiente -> Aprobado
@@ -197,7 +202,7 @@ export function Dashboard() {
           <div className="col-12 col-lg-6">
             <WaterStatusCard
               data={data}
-              onToggleValve={toggleValve}
+              onToggleValve={handleToggleValve}
               onTogglePresence={togglePresence}
               onToggleAutoClose={toggleAutoClose}
             />
@@ -211,6 +216,58 @@ export function Dashboard() {
             />
           </div>
         </div>
+
+        {/* Modal de Confirmación de Cierre / Apertura de Válvula */}
+        {showConfirmCloseModal && (
+          <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 2000 }}>
+            <div className="modal-dialog modal-dialog-centered" role="document">
+              <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style={{ background: "var(--surface)", color: "var(--text)", borderColor: "var(--header-border)" }}>
+                <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                  <h5 className="modal-title fw-bold d-flex align-items-center gap-2" style={{ color: "var(--text)" }}>
+                    <AlertTriangle size={24} className="text-warning" />
+                    {data.valveOpen ? "Confirmar Cierre de Válvula" : "Confirmar Apertura de Válvula"}
+                  </h5>
+                  <button 
+                    type="button" 
+                    className="btn-close shadow-none" 
+                    onClick={() => setShowConfirmCloseModal(false)} 
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body px-4 py-3">
+                  <p className="text-muted mb-0" style={{ fontSize: 14.5, lineHeight: 1.6 }}>
+                    {data.valveOpen ? (
+                      <>
+                        ¿Estás seguro de que deseas <strong>cerrar la válvula principal</strong> de agua? 
+                        Esto suspenderá temporalmente el caudal de agua en todo tu domicilio.
+                      </>
+                    ) : (
+                      <>
+                        ¿Estás seguro de que deseas <strong>abrir la válvula principal</strong> de agua? 
+                        Esto restablecerá el caudal de agua en todo tu domicilio.
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="modal-footer border-top-0 pt-0 pb-4 px-4 d-flex gap-2 justify-content-end">
+                  <button type="button" className="btn btn-light px-4 py-2 rounded-3 fw-medium text-secondary" onClick={() => setShowConfirmCloseModal(false)}>
+                    Cancelar
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`btn ${data.valveOpen ? "btn-danger" : "btn-success"} px-4 py-2 rounded-3 fw-semibold text-white`} 
+                    onClick={() => {
+                      toggleValve();
+                      setShowConfirmCloseModal(false);
+                    }}
+                  >
+                    {data.valveOpen ? "Sí, Cerrar Válvula" : "Sí, Abrir Válvula"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     );
   }
