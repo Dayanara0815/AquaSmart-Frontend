@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { User, Upload } from "lucide-react";
+import { useEffect, useState, useContext } from "react";
+import { User, Upload, Eye } from "lucide-react";
 import { api } from "../api/Aquasmart";
+import { ThemeContext } from "../contexts/ThemeContext";
 
 const DEFAULT_SETTINGS = {
   airAlertsEnabled: true,
@@ -12,6 +13,7 @@ const DEFAULT_SETTINGS = {
 };
 
 export function Ajustes() {
+  const { daltonismEnabled, toggleDaltonism } = useContext(ThemeContext);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -270,6 +272,35 @@ export function Ajustes() {
           </div>
 
           {message && <div className="alert alert-info mb-0">{message}</div>}
+        </div>
+      </div>
+
+      {/* Tarjeta de Accesibilidad */}
+      <div className="card border-0 shadow-sm rounded-4 p-4 mx-auto mt-4" style={{ maxWidth: 760 }}>
+        <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
+          <Eye size={20} className="text-primary" />
+          Accesibilidad y Ayuda Visual
+        </h5>
+        
+        <div className="p-3 bg-light rounded-3 mb-3 border border-light">
+          <div className="fw-semibold text-dark mb-1">¿Tienes problemas con los colores?</div>
+          <div className="text-muted small" style={{ lineHeight: 1.5 }}>
+            Permítenos ayudarte: Si eres daltonico o tienes dificultades para percibir o distinguir ciertos colores (como el rojo y el verde), activa esta opción para aplicar colores de alto contraste que faciliten tu navegación.
+          </div>
+        </div>
+
+        <div className="d-flex align-items-center justify-content-between">
+          <span className="fw-medium">Activar Modo Daltonismo</span>
+          <div className="form-check form-switch mb-0">
+            <input
+              type="checkbox"
+              className="form-check-input cursor-pointer"
+              id="daltonism-toggle"
+              checked={daltonismEnabled}
+              onChange={(e) => toggleDaltonism(e.target.checked)}
+              style={{ width: "2.8em", height: "1.4em" }}
+            />
+          </div>
         </div>
       </div>
     </div>
