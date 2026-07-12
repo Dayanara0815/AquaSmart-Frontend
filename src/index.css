@@ -275,3 +275,20 @@ header {
   font-size: 10px;
 }
 
+/* Animation for recording state in AI Assistant */
+@keyframes voicePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+.voice-record-pulse {
+  animation: voicePulse 1.5s infinite;
+  background-color: #dc3545 !important;
+}
