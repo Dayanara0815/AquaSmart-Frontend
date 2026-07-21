@@ -302,86 +302,8 @@ export function Login({ onLoginSuccess }) {
                 </button>
               </form>
 
-              {/* BOTONES DE ACCESO RÁPIDO PARA LAS 5 CUENTAS */}
-              <div className="mt-4 pt-3 border-top border-white border-opacity-10">
-                <div className="text-white-50 small mb-2 text-center" style={{ fontSize: 11, letterSpacing: 0.3 }}>
-                  ACCESO RÁPIDO A CUENTAS DE DEMOSTRACIÓN (CONTRASEÑA: password123)
-                </div>
-                <div className="d-flex flex-column gap-1.5">
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-light text-start py-1.5 px-2.5 rounded-3 d-flex align-items-center justify-content-between border-0 bg-white bg-opacity-10"
-                    style={{ fontSize: 11.5 }}
-                    onClick={() => {
-                      setEmail("domestico@aquasmart.pe");
-                      setPassword("password123");
-                      void handleLogin("domestico@aquasmart.pe", "password123");
-                    }}
-                  >
-                    <span>🏠 <strong>Doméstico:</strong> maria.quispe@aquasmart.pe</span>
-                    <span className="badge bg-primary px-2">Hogar</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-light text-start py-1.5 px-2.5 rounded-3 d-flex align-items-center justify-content-between border-0 bg-white bg-opacity-10"
-                    style={{ fontSize: 11.5 }}
-                    onClick={() => {
-                      setEmail("comercio@aquasmart.pe");
-                      setPassword("password123");
-                      void handleLogin("comercio@aquasmart.pe", "password123");
-                    }}
-                  >
-                    <span>🏪 <strong>Comercio (HU14):</strong> comercio@aquasmart.pe</span>
-                    <span className="badge bg-warning text-dark px-2">Negocio</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-light text-start py-1.5 px-2.5 rounded-3 d-flex align-items-center justify-content-between border-0 bg-white bg-opacity-10"
-                    style={{ fontSize: 11.5 }}
-                    onClick={() => {
-                      setEmail("reclamos@aquasmart.pe");
-                      setPassword("password123");
-                      void handleLogin("reclamos@aquasmart.pe", "password123");
-                    }}
-                  >
-                    <span>📜 <strong>Reclamos (HU22):</strong> reclamos@aquasmart.pe</span>
-                    <span className="badge bg-danger px-2">Expediente SEDAPAL</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-light text-start py-1.5 px-2.5 rounded-3 d-flex align-items-center justify-content-between border-0 bg-white bg-opacity-10"
-                    style={{ fontSize: 11.5 }}
-                    onClick={() => {
-                      setEmail("tecnico@aquasmart.pe");
-                      setPassword("password123");
-                      void handleLogin("tecnico@aquasmart.pe", "password123");
-                    }}
-                  >
-                    <span>🛠️ <strong>Técnico:</strong> tecnico@aquasmart.pe</span>
-                    <span className="badge bg-info text-dark px-2">INACAL / Campo</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-light text-start py-1.5 px-2.5 rounded-3 d-flex align-items-center justify-content-between border-0 bg-white bg-opacity-10"
-                    style={{ fontSize: 11.5 }}
-                    onClick={() => {
-                      setEmail("municipal@aquasmart.pe");
-                      setPassword("password123");
-                      void handleLogin("municipal@aquasmart.pe", "password123");
-                    }}
-                  >
-                    <span>🏛️ <strong>Municipal:</strong> municipal@aquasmart.pe</span>
-                    <span className="badge bg-secondary px-2">Vigilancia</span>
-                  </button>
-                </div>
-              </div>
-
               {/* Botón para alternar a Registro */}
-              <div className="text-center mt-3" style={{ fontSize: 12.5 }}>
+              <div className="text-center mt-4" style={{ fontSize: 13 }}>
                 <span className="text-white-50">¿Eres un vecino nuevo? </span>
                 <button
                   onClick={() => {
@@ -389,7 +311,7 @@ export function Login({ onLoginSuccess }) {
                     setError("");
                   }}
                   className="btn btn-link text-info p-0 ms-1 fw-bold text-decoration-none"
-                  style={{ fontSize: 12.5 }}
+                  style={{ fontSize: 13 }}
                 >
                   Regístrate aquí
                 </button>
