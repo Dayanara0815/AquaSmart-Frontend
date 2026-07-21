@@ -10,6 +10,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Reportes } from "./pages/Reportes";
 import { Notificaciones } from "./pages/Notificaciones";
 import { Ajustes } from "./pages/Ajustes";
+import { Perfil } from "./pages/Perfil";
 import { Cierres } from "./pages/Cierres";
 import { AIChatDrawer } from "./components/ui/AIChatDrawer";
 
@@ -75,6 +76,7 @@ export default function App() {
         <main className="flex-fill overflow-auto pb-5 pb-md-0">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/perfil" element={<Perfil />} />
             <Route 
               path="/reportes" 
               element={isDomestic ? <Reportes /> : <Navigate to="/" replace />} 

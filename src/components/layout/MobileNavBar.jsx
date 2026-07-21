@@ -1,4 +1,4 @@
-import { Home, BarChart2, Bell, Settings, ShieldCheck } from "lucide-react";
+import { Home, BarChart2, Bell, Settings, ShieldCheck, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export function MobileNavBar() {
@@ -10,6 +10,11 @@ export function MobileNavBar() {
       path: "/",
       label: "Inicio",
       icon: Home,
+    },
+    {
+      path: "/perfil",
+      label: "Perfil",
+      icon: User,
     },
     {
       path: "/reportes",
@@ -35,7 +40,7 @@ export function MobileNavBar() {
 
   const allowedItems = NAV_ITEMS.filter(({ path }) => {
     if (userRole === "TECNICO" || userRole === "MUNICIPAL") {
-      return path === "/" || path === "/ajustes" || path === "/notificaciones";
+      return path === "/" || path === "/perfil" || path === "/ajustes" || path === "/notificaciones";
     }
     return true;
   });

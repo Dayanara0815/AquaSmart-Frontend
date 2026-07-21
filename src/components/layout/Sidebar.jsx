@@ -4,6 +4,7 @@ import {
   Bell,
   Settings,
   ShieldCheck,
+  User,
   LogOut,
 } from "lucide-react";
 
@@ -17,6 +18,11 @@ const NAV_ITEMS = [
     path: "/",
     label: "Inicio",
     icon: Home,
+  },
+  {
+    path: "/perfil",
+    label: "Perfil",
+    icon: User,
   },
   {
     path: "/reportes",
@@ -46,7 +52,7 @@ export function Sidebar({ onLogout }) {
 
   const allowedItems = NAV_ITEMS.filter(({ path }) => {
     if (userRole === "TECNICO" || userRole === "MUNICIPAL") {
-      return path === "/" || path === "/ajustes" || path === "/notificaciones";
+      return path === "/" || path === "/perfil" || path === "/ajustes" || path === "/notificaciones";
     }
     return true;
   });
