@@ -96,22 +96,54 @@ export function Perfil() {
 
   const [qrDataUrl, setQrDataUrl] = useState("");
 
-  // Datos del Medidor y Titular para la Certificación SEDAPAL
-  const meterInfo = {
-    serialNumber: "ASM-2048",
-    sedapalSupplyNum: "SUM-7849201",
-    brandModel: "AquaSmart Telemetric Ultra-Sonic v3.2",
-    installDate: "15/11/2025",
-    nominalDiameter: "DN 15mm (1/2\")",
-    metrologicalClass: "Clase C (ISO 4064)",
-    calibrationStatus: "CERTIFICADO - ERROR 0.01%",
-    address: "Av. Puente Piedra 450, Mz. B Lt. 12, Lima - Perú",
-    securityHash: "SHA256: 8f9a2b4c1e7d3f5a0b9c8d7e6f5a4b3c2d1e0f9a",
-    verificationUrl: "https://aquasmart.pe/verify/ASM-2048-SEDAPAL"
+  const getMeterInfo = (email) => {
+    if (email.includes("comercio")) {
+      return {
+        serialNumber: "ASM-LAVANDERIA",
+        sedapalSupplyNum: "SUM-9021482",
+        brandModel: "AquaSmart Telemetric High-Flow Commercial v3.2",
+        installDate: "20/01/2026",
+        nominalDiameter: "DN 25mm (1\")",
+        metrologicalClass: "Clase C Commercial (ISO 4064)",
+        calibrationStatus: "CERTIFICADO COMERCIAL - INACAL",
+        address: "Av. Buenos Aires 120, Puente Piedra - Lima",
+        securityHash: "SHA256: 4f8b2c1d9e3a7f6c5b4a3d2e1f0a9b8c7d6e5f4a",
+        verificationUrl: "https://aquasmart.pe/verify/ASM-LAVANDERIA-SEDAPAL"
+      };
+    }
+    if (email.includes("reclamos")) {
+      return {
+        serialNumber: "ASM-1024",
+        sedapalSupplyNum: "SUM-5510923",
+        brandModel: "AquaSmart Telemetric Ultra-Sonic v3.2",
+        installDate: "10/03/2025",
+        nominalDiameter: "DN 15mm (1/2\")",
+        metrologicalClass: "Clase C (ISO 4064)",
+        calibrationStatus: "EXPEDIENTE RECLAMO ACTIVO",
+        address: "Jr. San Martín 880, Puente Piedra - Lima",
+        securityHash: "SHA256: 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+        verificationUrl: "https://aquasmart.pe/verify/ASM-1024-SEDAPAL"
+      };
+    }
+    return {
+      serialNumber: "ASM-2048",
+      sedapalSupplyNum: "SUM-7849201",
+      brandModel: "AquaSmart Telemetric Ultra-Sonic v3.2",
+      installDate: "15/11/2025",
+      nominalDiameter: "DN 15mm (1/2\")",
+      metrologicalClass: "Clase C (ISO 4064)",
+      calibrationStatus: "CERTIFICADO - ERROR 0.01%",
+      address: "Av. Puente Piedra 450, Mz. B Lt. 12, Lima - Perú",
+      securityHash: "SHA256: 8f9a2b4c1e7d3f5a0b9c8d7e6f5a4b3c2d1e0f9a",
+      verificationUrl: "https://aquasmart.pe/verify/ASM-2048-SEDAPAL"
+    };
   };
 
+  const emailVal = localStorage.getItem("userEmail") || "domestico@aquasmart.pe";
+  const meterInfo = getMeterInfo(emailVal);
+
   useEffect(() => {
-    const email = localStorage.getItem("userEmail") || "maria.quispe@example.com";
+    const email = localStorage.getItem("userEmail") || "domestico@aquasmart.pe";
     const fullName = localStorage.getItem("userFullName") || "María Fernanda Quispe Rojas";
     const role = localStorage.getItem("userRole") || "DOMESTICO";
     const foto = localStorage.getItem("userFotoPerfil") || "";
