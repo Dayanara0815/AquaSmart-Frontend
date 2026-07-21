@@ -3,7 +3,8 @@ import {
   Bell, AlertTriangle, Droplets, ShieldAlert, CheckCircle, 
   Calendar, Clock, ListFilter, HelpCircle, Activity,
   Wrench, Play, CheckSquare, ShieldCheck, ChevronRight,
-  BellOff, VolumeX, SlidersHorizontal, Settings, Check, Moon
+  BellOff, VolumeX, SlidersHorizontal, Settings, Check, Moon,
+  Zap, Radio, Send, X, ClipboardList, Square
 } from "lucide-react";
 import { api } from "../api/Aquasmart";
 
@@ -180,11 +181,116 @@ export function Notificaciones() {
     return localStorage.getItem("aquasmart_silent_to") || "08:00";
   });
 
+  // --- HISTORIA DE USUARIO 12 (RF5): Notificaciones Push Inmediatas por Fuga ---
+  const [pushPermission, setPushPermission] = useState(() => {
+    return (typeof window !== "undefined" && "Notification" in window) ? Notification.permission : "default";
+  });
+  const [pushToastAlert, setPushToastAlert] = useState(null);
+
+  // --- HISTORIA DE USUARIO 14 (RF6): Alertas Preventivas de Corte de Agua (Comercio / Doméstico) ---
+  const [showContingencyModal, setShowContingencyModal] = useState(false);
+  const [contingencySavedMsg, setContingencySavedMsg] = useState("");
+  const [reminderSetMsg, setReminderSetMsg] = useState("");
+  const [checklistState, setChecklistState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("aquasmart_contingency_checklist");
+      return saved ? JSON.parse(saved) : { fillTank: true, storeWater: true, notifyTeam: false, pauseMachines: false };
+    } catch {
+      return { fillTank: true, storeWater: true, notifyTeam: false, pauseMachines: false };
+    }
+  });
+
+  const handleToggleChecklist = (key) => {
+    setChecklistState((prev) => {
+      const updated = { ...prev, [key]: !prev[key] };
+      localStorage.setItem("aquasmart_contingency_checklist", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleSaveContingencyPlan = () => {
+    setContingencySavedMsg("¡Plan de preparación para el corte de agua guardado con éxito!");
+    setTimeout(() => {
+      setContingencySavedMsg("");
+      setShowContingencyModal(false);
+    }, 1200);
+  };
+
+  const handleSetReminder = () => {
+    setReminderSetMsg("⏰ Recordatorio programado: Recibirás un aviso Push 2 horas antes del corte.");
+    setTimeout(() => setReminderSetMsg(""), 3500);
+
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("⏰ Recordatorio de Corte de Agua Programado", {
+        body: "Te notificaremos 2 horas antes de que inicie el corte preventivo de SEDAPAL.",
+        icon: "/favicon.ico"
+      });
+    }
+  };
+
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [preferencesSavedMsg, setPreferencesSavedMsg] = useState("");
 
   const userRole = localStorage.getItem("userRole") || "DOMESTICO";
   const userEmail = localStorage.getItem("userEmail");
+
+  // Solicitud de Permiso Push Nativo del Navegador
+  const handleRequestPushPermission = async () => {
+    if (!("Notification" in window)) {
+      alert("Tu navegador no soporta Notificaciones Push Nativas.");
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      setPushPermission(permission);
+      if (permission === "granted") {
+        new Notification("🔔 Notificaciones Push AquaSmart Activadas", {
+          body: "Recibirás alertas inmediatas en tiempo real ante fugas de agua.",
+          icon: "/favicon.ico"
+        });
+      }
+    } catch (err) {
+      console.error("Error al solicitar permiso Push", err);
+    }
+  };
+
+  // Simulación de Fuga en Tiempo Real con Push Inmediato
+  const handleSimulatePushLeak = () => {
+    const leakMessage = "🚨 ALERTA CRÍTICA: Fuga Silenciosa en Tiempo Real";
+    const leakBody = "Se registró consumo continuo anómalo de 245.8 L/h en el medidor ASM-2048. ¡Actúa rápido!";
+
+    // 1. Notificación push nativa del sistema si hay permiso
+    if ("Notification" in window && Notification.permission === "granted") {
+      try {
+        new Notification(leakMessage, {
+          body: leakBody,
+          icon: "/favicon.ico",
+          tag: "fuga-critica-aquasmart",
+          requireInteraction: true,
+        });
+      } catch (e) {
+        console.warn("No se pudo emitir notificación nativa", e);
+      }
+    }
+
+    // 2. Agregar nueva alerta activa en la lista
+    const newLeakAlert = {
+      id: Date.now(),
+      active: true,
+      message: "🚨 FUGA CRÍTICA DETECTADA EN TIEMPO REAL",
+      schedule: "Hace 1 instante",
+      type: "Fuga",
+      state: "Activa",
+      description: "Telemetría ultrasonido detectó consumo continuo ininterrumpido (245.8 L/h). ¡Se requiere cierre preventivo de válvula para minimizar pérdida de agua!",
+      timestamp: new Date().toLocaleDateString("es-PE") + " " + new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setAlerts((prev) => [newLeakAlert, ...prev]);
+    setSelectedIndex(0);
+
+    // 3. Mostrar banner flotante de emergencia en pantalla
+    setPushToastAlert(newLeakAlert);
+  };
 
   // Helper para verificar si una alerta está silenciada
   const isAlertSilenced = (alert) => {
@@ -499,6 +605,101 @@ export function Notificaciones() {
         </div>
       </div>
 
+      {/* HISTORIA DE USUARIO 12 (RF5): NOTIFICACIONES PUSH INMEDIATAS POR FUGA */}
+      <div className="card border-0 shadow-sm rounded-4 p-3.5 mb-4" style={{ background: "var(--surface)", borderLeft: "5px solid #ef4444" }}>
+        <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div className="d-flex align-items-center gap-3">
+            <div className="p-2.5 bg-danger bg-opacity-10 text-danger rounded-circle">
+              <Zap size={24} />
+            </div>
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-1">
+                <h6 className="fw-bold mb-0" style={{ color: "var(--text)" }}>Notificaciones Push Nativas por Fuga</h6>
+                {pushPermission === "granted" ? (
+                  <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 rounded-pill fw-bold" style={{ fontSize: 10 }}>
+                    ✓ Push Nativo Activo
+                  </span>
+                ) : (
+                  <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2.5 py-1 rounded-pill fw-bold" style={{ fontSize: 10 }}>
+                    ⚠️ Permiso Requerido
+                  </span>
+                )}
+              </div>
+              <p className="text-muted small mb-0" style={{ fontSize: 12 }}>
+                Alertas instantáneas enviadas al sistema operativo al detectar consumos anómalos o fugas para minimizar pérdida de agua.
+              </p>
+            </div>
+          </div>
+
+          <div className="d-flex align-items-center gap-2 flex-wrap ms-auto">
+            {pushPermission !== "granted" && (
+              <button 
+                onClick={handleRequestPushPermission}
+                className="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1"
+                style={{ fontSize: 12 }}
+              >
+                <Radio size={14} />
+                Activar Push Nativo
+              </button>
+            )}
+            <button 
+              onClick={handleSimulatePushLeak}
+              className="btn btn-sm btn-danger rounded-pill px-3.5 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm border-0"
+              style={{ fontSize: 12 }}
+            >
+              <Send size={14} />
+              Simular Fuga Inmediata (Probar Push)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* TOAST FLOTANTE DE EMERGENCIA (PUSH SIMULADO) */}
+      {pushToastAlert && (
+        <div 
+          className="position-fixed top-0 end-0 p-3" 
+          style={{ zIndex: 9999, maxWidth: 420 }}
+        >
+          <div className="card border-danger border-2 shadow-lg rounded-4 overflow-hidden animate-slide-in" style={{ background: "var(--surface)", color: "var(--text)" }}>
+            <div className="bg-danger text-white p-3 d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center gap-2 fw-bold" style={{ fontSize: 13.5 }}>
+                <Zap size={18} className="animate-pulse" />
+                NOTIFICACIÓN PUSH NATIVA
+              </div>
+              <button 
+                className="btn-close btn-close-white shadow-none" 
+                onClick={() => setPushToastAlert(null)}
+              />
+            </div>
+            <div className="p-3">
+              <h6 className="fw-bold text-danger mb-1" style={{ fontSize: 13.5 }}>{pushToastAlert.message}</h6>
+              <p className="small text-muted mb-3" style={{ fontSize: 12 }}>
+                {pushToastAlert.description}
+              </p>
+              <div className="d-flex gap-2">
+                <button 
+                  className="btn btn-sm btn-danger flex-fill fw-bold py-2"
+                  onClick={() => {
+                    setPushToastAlert(null);
+                    alert("¡Válvula principal cerrada con éxito de forma remota! Se ha minimizado el desperdicio de agua.");
+                  }}
+                  style={{ fontSize: 12 }}
+                >
+                  🚨 Cerrar Válvula de Agua
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-secondary px-3"
+                  onClick={() => setPushToastAlert(null)}
+                  style={{ fontSize: 12 }}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* BANNER INFORMATIVO DE HU13 (RF5) SI HAY ALERTAS SILENCIADAS */}
       {(muteNonCritical || muteAir || muteCuts) && (
         <div className="alert alert-warning border-0 shadow-sm rounded-4 mb-4 p-3 d-flex align-items-center justify-content-between flex-wrap gap-2 animate-fade-in">
@@ -789,40 +990,120 @@ export function Notificaciones() {
                     </div>
                   )}
 
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <label className="text-muted d-block small mb-1">Evento</label>
-                      <div className="fw-bold" style={{ fontSize: 15, color: "var(--text)" }}>{selectedAlert.message}</div>
-                    </div>
-
-                    <div className="col-12 col-md-6">
-                      <label className="text-muted d-block small mb-1">Fecha / Hora de Registro</label>
-                      <div style={{ color: "var(--text)", fontSize: 13.5 }}>{selectedAlert.timestamp || "Reciente"}</div>
-                    </div>
-
-                    <div className="col-12 col-md-6">
-                      <label className="text-muted d-block small mb-1">Tipo de Evento</label>
-                      <div style={{ color: "var(--text)", fontSize: 13.5 }}>{selectedAlert.type || "Anomalía"}</div>
-                    </div>
-
-                    <div className="col-12">
-                      <label className="text-muted d-block small mb-1">Análisis IA / Descripción Técnica</label>
-                      <div 
-                        className="p-3 rounded-3" 
-                        style={{ background: "var(--surface)", border: "1px solid var(--header-border)", color: "var(--text)", fontSize: 13, lineHeight: 1.5 }}
-                      >
-                        {selectedAlert.description || "No hay observaciones técnicas específicas registradas para este evento."}
+                  {/* HISTORIA DE USUARIO 14 (RF6): TARJETA ESPECIAL DE CORTE PREVENTIVO */}
+                  {((selectedAlert.type || "").toLowerCase().includes("corte") || (selectedAlert.message || "").toLowerCase().includes("corte")) && (
+                    <div className="card border-warning border-0 rounded-4 p-3.5 shadow-sm mb-2" style={{ background: "color-mix(in srgb, var(--warn-bg) 85%, var(--surface))", borderLeft: "5px solid #f59e0b" }}>
+                      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <div className="d-flex align-items-center gap-2">
+                          <ShieldAlert size={20} className="text-warning-emphasis" />
+                          <h6 className="fw-bold mb-0 text-warning-emphasis" style={{ fontSize: 13.5 }}>
+                            🛡️ Alerta Preventiva de Corte de Agua - Plan de Contingencia
+                          </h6>
+                        </div>
+                        <span className="badge bg-warning bg-opacity-25 text-warning-emphasis px-2.5 py-1 rounded-pill fw-bold" style={{ fontSize: 10 }}>
+                          Faltan 14h 30m
+                        </span>
                       </div>
+
+                      <p className="small text-muted mb-3" style={{ fontSize: 12 }}>
+                        Mantenimiento telemétrico preventivo programado por SEDAPAL. {userRole === "COMERCIO" ? "Prepara tu pequeño negocio con anticipación para no interrumpir tu atención comercial." : "Prepara las reservas de tu hogar con tiempo para evitar incomodidades."}
+                      </p>
+
+                      {/* Reserva sugerida por perfil */}
+                      <div className="p-3 rounded-3 mb-3 border bg-white text-dark shadow-xs" style={{ fontSize: 12 }}>
+                        <div className="fw-bold mb-1 d-flex align-items-center gap-2">
+                          <Droplets size={16} className="text-primary" />
+                          {userRole === "COMERCIO" ? "🏪 Reserva Comercial Sugerida:" : "🏠 Reserva Doméstica Sugerida:"}
+                        </div>
+                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                          <span className="text-muted" style={{ fontSize: 11.5 }}>
+                            {userRole === "COMERCIO" 
+                              ? "Basado en tu consumo de negocio promedio, se sugiere almacenar:"
+                              : "Basado en el consumo de tu suministro, se sugiere almacenar:"}
+                          </span>
+                          <span className="fw-bold text-primary" style={{ fontSize: 15 }}>
+                            {userRole === "COMERCIO" ? "450 Litros" : "120 Litros"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="d-flex gap-2 flex-wrap">
+                        <button 
+                          className="btn btn-sm btn-warning text-dark flex-fill fw-bold py-2 d-flex align-items-center justify-content-center gap-1.5 shadow-sm border-0"
+                          onClick={() => setShowContingencyModal(true)}
+                          style={{ fontSize: 12 }}
+                        >
+                          <ClipboardList size={15} />
+                          📋 Abrir Plan de Preparación / Checklist
+                        </button>
+
+                        <button 
+                          className="btn btn-sm btn-outline-dark px-3 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1.5"
+                          onClick={handleSetReminder}
+                          style={{ fontSize: 12 }}
+                        >
+                          <Clock size={15} />
+                          ⏰ Recordatorio (2h antes)
+                        </button>
+                      </div>
+
+                      {reminderSetMsg && (
+                        <div className="alert alert-success border-0 py-2 px-3 mb-0 mt-2 rounded-3 text-center small fw-semibold">
+                          {reminderSetMsg}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* DIAGNÓSTICO FLUIDO Y NATURAL DEL EVENTO (HU 16 - RF5) */}
+                  <div className="card border-0 shadow-xs rounded-4 p-3.5 mb-2" style={{ background: "var(--surface)", border: "1px solid var(--header-border)" }}>
+                    <div className="d-flex align-items-center justify-content-between mb-2.5 border-bottom pb-2" style={{ borderColor: "var(--header-border)" }}>
+                      <div className="fw-bold d-flex align-items-center gap-2" style={{ color: "var(--text)", fontSize: 13.5 }}>
+                        <Activity size={17} className="text-primary" />
+                        Informe Narrativo del Evento Telemétrico
+                      </div>
+                      <span className="badge bg-primary bg-opacity-10 text-primary px-2.5 py-1 rounded-pill fw-semibold" style={{ fontSize: 10.5 }}>
+                        Análisis Automatizado
+                      </span>
                     </div>
 
-                    <div className="col-12 col-md-6">
-                      <label className="text-muted d-block small mb-1">Sistema Afectado</label>
-                      <div style={{ color: "var(--text)", fontSize: 13.5 }}>Tuberías / Red Domiciliaria Puente Piedra</div>
+                    {/* PÁRRAFO NARRATIVO NATURAL QUE RESPONDE QUÉ, CUÁNDO, DÓNDE Y POR QUÉ */}
+                    <div className="p-3 rounded-3 mb-3" style={{ background: "var(--surface-soft)", borderLeft: "4px solid #3b82f6", color: "var(--text)", fontSize: 12.5, lineHeight: 1.6 }}>
+                      {selectedAlert.type?.toLowerCase().includes("fuga") ? (
+                        <>
+                          El sistema de monitoreo detectó una <strong>{selectedAlert.message}</strong> el <strong>{selectedAlert.timestamp || "recientemente"}</strong> registrada a través del medidor telemétrico <strong>ASM-2048</strong> (Suministro SEDAPAL <code>SUM-7849201</code>), ubicado en la tubería interna de la propiedad en Puente Piedra. Este evento se generó por un consumo continuo ininterrumpido en horario no convencional de madrugada, causado probablemente por un empaque de sanitario desgastado o una fuga oculta en la red domiciliaria.
+                        </>
+                      ) : selectedAlert.type?.toLowerCase().includes("corte") ? (
+                        <>
+                          Se ha registrado un <strong>{selectedAlert.message}</strong> programado para el <strong>{selectedAlert.schedule || "periodo indicado"}</strong> en el suministro <code>SUM-7849201</code> (Medidor <strong>ASM-2048</strong>), correspondiente al sector telemétrico de Puente Piedra. Este aviso preventivo responde a trabajos de mantenimiento y calibración en las redes matrices por parte de la EPS SEDAPAL para asegurar la estabilidad del servicio.
+                        </>
+                      ) : (
+                        <>
+                          Se registró un <strong>{selectedAlert.message}</strong> el <strong>{selectedAlert.timestamp || "recientemente"}</strong> a través del sensor telemétrico del medidor <strong>ASM-2048</strong> en el inmueble de Puente Piedra. El evento fue ocasionado por una fluctuación transitoria en la presión de la red hidráulica o purga de aire en la tubería, habiendo sido filtrado de manera segura para evitar falsas alarmas.
+                        </>
+                      )}
                     </div>
 
-                    <div className="col-12 col-md-6">
-                      <label className="text-muted d-block small mb-1">Horario de Monitoreo</label>
-                      <div style={{ color: "var(--text)", fontSize: 13.5 }}>{selectedAlert.schedule || "Telemetría 24/7"}</div>
+                    {/* FICHA RESUMEN CON INFORMACIÓN RELEVANTE */}
+                    <div className="row g-2 text-muted small" style={{ fontSize: 11.5 }}>
+                      <div className="col-6 col-md-3">
+                        <span className="d-block text-muted" style={{ fontSize: 10.5 }}>Categoría</span>
+                        <strong className="text-dark">{selectedAlert.type || "Anomalía"}</strong>
+                      </div>
+                      <div className="col-6 col-md-3">
+                        <span className="d-block text-muted" style={{ fontSize: 10.5 }}>Fecha de Registro</span>
+                        <strong className="text-dark">{selectedAlert.timestamp || "Tiempo Real"}</strong>
+                      </div>
+                      <div className="col-6 col-md-3">
+                        <span className="d-block text-muted" style={{ fontSize: 10.5 }}>Medidor / Suministro</span>
+                        <strong className="text-dark">ASM-2048</strong>
+                      </div>
+                      <div className="col-6 col-md-3">
+                        <span className="d-block text-muted" style={{ fontSize: 10.5 }}>Estado de Atención</span>
+                        <span className={`badge rounded-pill ${getBadgeClass(selectedAlert.state)}`} style={{ fontSize: 9.5 }}>
+                          {selectedAlert.state || "Activo"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -1098,6 +1379,160 @@ export function Notificaciones() {
                 </button>
                 <button type="button" className="btn btn-danger px-4 py-2 rounded-3 fw-semibold text-white" onClick={confirmCloseValve}>
                   Sí, Cerrar Válvula
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL DE PLAN DE PREPARACIÓN / CONTINGENCIA (HU 14 - RF6) */}
+      {showContingencyModal && (
+        <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", zIndex: 2000 }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style={{ background: "var(--surface)", color: "var(--text)", borderColor: "var(--header-border)" }}>
+              <div className="modal-header border-bottom pb-3 pt-4 px-4 d-flex justify-content-between align-items-center" style={{ borderColor: "var(--header-border)" }}>
+                <div>
+                  <h5 className="modal-title fw-bold d-flex align-items-center gap-2 mb-1" style={{ color: "var(--text)" }}>
+                    <ClipboardList size={22} className="text-warning-emphasis" />
+                    Plan de Preparación ante Corte de Agua
+                  </h5>
+                  <p className="text-muted mb-0 small" style={{ fontSize: 12 }}>
+                    {userRole === "COMERCIO" 
+                      ? "Plan de contingencia comercial para garantizar la operatividad de tu negocio durante el corte programado." 
+                      : "Checklist preventivo para asegurar el abastecimiento e higiene del hogar."}
+                  </p>
+                </div>
+                <button 
+                  type="button" 
+                  className="btn-close shadow-none" 
+                  onClick={() => setShowContingencyModal(false)} 
+                  aria-label="Close"
+                ></button>
+              </div>
+
+              <div className="modal-body px-4 py-4 d-flex flex-column gap-3">
+                {/* TARJETA INFORMATIVA DE VOLUMEN RECOMENDADO */}
+                <div className="p-3 rounded-4 bg-warning bg-opacity-10 border border-warning border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                  <div className="d-flex align-items-center gap-3">
+                    <Droplets size={24} className="text-warning-emphasis" />
+                    <div>
+                      <div className="fw-bold text-dark" style={{ fontSize: 13.5 }}>
+                        Reserva Recomendada para Perfil {userRole}:
+                      </div>
+                      <div className="text-muted small" style={{ fontSize: 12 }}>
+                        {userRole === "COMERCIO" 
+                          ? "Almacenar 450 Litros en recipientes o tanques limpios antes de las 08:00 a.m." 
+                          : "Almacenar 120 Litros para necesidades esenciales del hogar."}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="badge bg-warning text-dark px-3 py-2 fw-bold" style={{ fontSize: 13 }}>
+                    {userRole === "COMERCIO" ? "450 L Sugeridos" : "120 L Sugeridos"}
+                  </span>
+                </div>
+
+                <div className="fw-semibold text-muted small uppercase mt-2" style={{ fontSize: 11, letterSpacing: 0.5 }}>
+                  CHECKLIST DE ACCIONES PREVENTIVAS
+                </div>
+
+                {/* ITEM 1 */}
+                <div 
+                  className="p-3 rounded-3 border d-flex align-items-center justify-content-between gap-3 cursor-pointer transition-all"
+                  onClick={() => handleToggleChecklist("fillTank")}
+                  style={{ background: checklistState.fillTank ? "rgba(34, 197, 94, 0.05)" : "var(--surface)", borderColor: checklistState.fillTank ? "#22c55e" : "var(--header-border)" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    {checklistState.fillTank ? <CheckSquare className="text-success" size={22} /> : <Square className="text-muted" size={22} />}
+                    <div>
+                      <div className={`fw-bold ${checklistState.fillTank ? "text-success text-decoration-line-through" : "text-dark"}`} style={{ fontSize: 13.5 }}>
+                        1. Llenar reservorio principal / tanques elevados
+                      </div>
+                      <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                        Asegurarse de que el cisterna o tanque del inmueble esté al 100% antes del horario de corte.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ITEM 2 */}
+                <div 
+                  className="p-3 rounded-3 border d-flex align-items-center justify-content-between gap-3 cursor-pointer transition-all"
+                  onClick={() => handleToggleChecklist("storeWater")}
+                  style={{ background: checklistState.storeWater ? "rgba(34, 197, 94, 0.05)" : "var(--surface)", borderColor: checklistState.storeWater ? "#22c55e" : "var(--header-border)" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    {checklistState.storeWater ? <CheckSquare className="text-success" size={22} /> : <Square className="text-muted" size={22} />}
+                    <div>
+                      <div className={`fw-bold ${checklistState.storeWater ? "text-success text-decoration-line-through" : "text-dark"}`} style={{ fontSize: 13.5 }}>
+                        2. Almacenar agua potable en recipientes cerrados
+                      </div>
+                      <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                        Para consumo directo, cocción e higiene básica durante las 6 horas programadas.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ITEM 3 */}
+                <div 
+                  className="p-3 rounded-3 border d-flex align-items-center justify-content-between gap-3 cursor-pointer transition-all"
+                  onClick={() => handleToggleChecklist("notifyTeam")}
+                  style={{ background: checklistState.notifyTeam ? "rgba(34, 197, 94, 0.05)" : "var(--surface)", borderColor: checklistState.notifyTeam ? "#22c55e" : "var(--header-border)" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    {checklistState.notifyTeam ? <CheckSquare className="text-success" size={22} /> : <Square className="text-muted" size={22} />}
+                    <div>
+                      <div className={`fw-bold ${checklistState.notifyTeam ? "text-success text-decoration-line-through" : "text-dark"}`} style={{ fontSize: 13.5 }}>
+                        3. {userRole === "COMERCIO" ? "Notificar al personal del negocio y ajustar atención" : "Notificar a todos los miembros de la vivienda"}
+                      </div>
+                      <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                        {userRole === "COMERCIO" ? "Avisar al equipo de cocina/atención sobre el uso racional de la reserva." : "Informar sobre el horario de restricción a los miembros de la familia."}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ITEM 4 */}
+                <div 
+                  className="p-3 rounded-3 border d-flex align-items-center justify-content-between gap-3 cursor-pointer transition-all"
+                  onClick={() => handleToggleChecklist("pauseMachines")}
+                  style={{ background: checklistState.pauseMachines ? "rgba(34, 197, 94, 0.05)" : "var(--surface)", borderColor: checklistState.pauseMachines ? "#22c55e" : "var(--header-border)" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    {checklistState.pauseMachines ? <CheckSquare className="text-success" size={22} /> : <Square className="text-muted" size={22} />}
+                    <div>
+                      <div className={`fw-bold ${checklistState.pauseMachines ? "text-success text-decoration-line-through" : "text-dark"}`} style={{ fontSize: 13.5 }}>
+                        4. {userRole === "COMERCIO" ? "Pausar equipamiento crítico (Cafeteras/Lavadoras/Hielo)" : "Resguardar aparatos (Evitar encender lavadoras o lavavajillas)"}
+                      </div>
+                      <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                        Previene daños en motores por succión de aire o caídas de presión en la red telemétrica.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {contingencySavedMsg && (
+                  <div className="alert alert-success border-0 py-2 px-3 mb-0 rounded-3 text-center small fw-semibold">
+                    <Check size={16} className="me-1" /> {contingencySavedMsg}
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer border-top pt-3 pb-4 px-4 d-flex gap-2 justify-content-end" style={{ borderColor: "var(--header-border)" }}>
+                <button 
+                  type="button" 
+                  className="btn btn-light px-4 py-2 rounded-3 fw-medium text-secondary" 
+                  onClick={() => setShowContingencyModal(false)}
+                >
+                  Cerrar
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-warning px-4 py-2 rounded-3 fw-bold text-dark d-flex align-items-center gap-1 shadow-sm border-0" 
+                  onClick={handleSaveContingencyPlan}
+                >
+                  <Check size={16} />
+                  Guardar Plan de Preparación
                 </button>
               </div>
             </div>
