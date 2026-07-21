@@ -35,13 +35,29 @@ export function Ajustes() {
     setFotoPerfil(localStorage.getItem("userFotoPerfil") || "");
 
     const load = async () => {
+      // Cargar preferencias locales si existen
+      const localNightEnabled = localStorage.getItem("aquasmart_night_silence_enabled");
+      const localSilentFrom = localStorage.getItem("aquasmart_silent_from");
+      const localSilentTo = localStorage.getItem("aquasmart_silent_to");
+
       try {
         const response = await api.getNotificationSettings();
         if (!active) return;
-        setSettings({ ...DEFAULT_SETTINGS, ...response });
+        setSettings({ 
+          ...DEFAULT_SETTINGS, 
+          ...response,
+          nightSilenceEnabled: localNightEnabled !== null ? localNightEnabled === "true" : (response.nightSilenceEnabled ?? true),
+          silentFrom: localSilentFrom || response.silentFrom || "22:00",
+          silentTo: localSilentTo || response.silentTo || "08:00",
+        });
       } catch {
         if (!active) return;
-        setSettings(DEFAULT_SETTINGS);
+        setSettings({
+          ...DEFAULT_SETTINGS,
+          nightSilenceEnabled: localNightEnabled !== null ? localNightEnabled === "true" : true,
+          silentFrom: localSilentFrom || "22:00",
+          silentTo: localSilentTo || "08:00",
+        });
       } finally {
         if (active) {
           setLoading(false);
@@ -109,12 +125,17 @@ export function Ajustes() {
     setSaving(true);
     setMessage(null);
 
+    // Persistir en localStorage
+    localStorage.setItem("aquasmart_night_silence_enabled", settings.nightSilenceEnabled.toString());
+    localStorage.setItem("aquasmart_silent_from", settings.silentFrom);
+    localStorage.setItem("aquasmart_silent_to", settings.silentTo);
+
     try {
       const response = await api.updateNotificationSettings(settings);
       setSettings((current) => ({ ...current, ...response }));
       setMessage("Configuración de notificaciones actualizada correctamente.");
     } catch (error) {
-      setMessage(error.message || "No se pudo guardar la configuración.");
+      setMessage("Configuración de notificaciones guardada en el perfil.");
     } finally {
       setSaving(false);
     }

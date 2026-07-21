@@ -3,7 +3,7 @@ import {
   Bell, AlertTriangle, Droplets, ShieldAlert, CheckCircle, 
   Calendar, Clock, ListFilter, HelpCircle, Activity,
   Wrench, Play, CheckSquare, ShieldCheck, ChevronRight,
-  BellOff, VolumeX, SlidersHorizontal, Settings, Check
+  BellOff, VolumeX, SlidersHorizontal, Settings, Check, Moon
 } from "lucide-react";
 import { api } from "../api/Aquasmart";
 
@@ -168,6 +168,18 @@ export function Notificaciones() {
   const [muteCuts, setMuteCuts] = useState(() => {
     return localStorage.getItem("aquasmart_mute_cuts") !== "false";
   });
+
+  // --- HISTORIA DE USUARIO 17 (RF5): Horario de silencio nocturno ---
+  const [nightSilenceEnabled, setNightSilenceEnabled] = useState(() => {
+    return localStorage.getItem("aquasmart_night_silence_enabled") !== "false";
+  });
+  const [silentFrom, setSilentFrom] = useState(() => {
+    return localStorage.getItem("aquasmart_silent_from") || "22:00";
+  });
+  const [silentTo, setSilentTo] = useState(() => {
+    return localStorage.getItem("aquasmart_silent_to") || "08:00";
+  });
+
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [preferencesSavedMsg, setPreferencesSavedMsg] = useState("");
 
@@ -194,7 +206,11 @@ export function Notificaciones() {
     localStorage.setItem("aquasmart_mute_non_critical", muteNonCritical.toString());
     localStorage.setItem("aquasmart_mute_air", muteAir.toString());
     localStorage.setItem("aquasmart_mute_cuts", muteCuts.toString());
-    setPreferencesSavedMsg("¡Preferencias de silenciado guardadas con éxito!");
+    localStorage.setItem("aquasmart_night_silence_enabled", nightSilenceEnabled.toString());
+    localStorage.setItem("aquasmart_silent_from", silentFrom);
+    localStorage.setItem("aquasmart_silent_to", silentTo);
+
+    setPreferencesSavedMsg("¡Preferencias y horario de silencio guardados con éxito!");
     setTimeout(() => {
       setPreferencesSavedMsg("");
       setShowPreferencesModal(false);
@@ -469,7 +485,7 @@ export function Notificaciones() {
             style={{ fontSize: 12.5 }}
           >
             {muteNonCritical || muteAir || muteCuts ? <BellOff size={15} /> : <Bell size={15} />}
-            <span>Desactivar / Silenciar Alertas (RF5)</span>
+            <span>Desactivar / Silenciar Alertas</span>
             {(muteNonCritical || muteAir || muteCuts) && (
               <span className="badge bg-dark text-white rounded-circle ms-1 px-1.5" style={{ fontSize: 10 }}>
                 {silencedCount}
@@ -492,7 +508,7 @@ export function Notificaciones() {
             </div>
             <div>
               <div className="fw-bold text-dark mb-0" style={{ fontSize: 13.5 }}>
-                🔕 Notificaciones no críticas silenciadas (Historia de Usuario 13 - RF5)
+                🔕 Notificaciones no críticas silenciadas
               </div>
               <div className="text-muted small" style={{ fontSize: 12 }}>
                 Has configurado el silenciado para evitar molestias en alertas de poca urgencia 
@@ -512,56 +528,82 @@ export function Notificaciones() {
         </div>
       )}
 
+      {/* BANNER INFORMATIVO DE HU17 (RF5): SILENCIO NOCTURNO ACTIVO */}
+      {nightSilenceEnabled && (
+        <div className="alert alert-info border-0 shadow-sm rounded-4 mb-4 p-3 d-flex align-items-center justify-content-between flex-wrap gap-2 animate-fade-in">
+          <div className="d-flex align-items-center gap-3">
+            <div className="p-2 bg-info bg-opacity-25 rounded-circle text-info-emphasis">
+              <Moon size={22} />
+            </div>
+            <div>
+              <div className="fw-bold text-dark mb-0" style={{ fontSize: 13.5 }}>
+                🌙 Horario de Silencio Nocturno Configurado ({silentFrom} a {silentTo})
+              </div>
+              <div className="text-muted small" style={{ fontSize: 12 }}>
+                Las notificaciones sonoras están desactivadas durante la noche para tu descanso. <strong>Todos los eventos continúan registrándose normalmente en el historial.</strong>
+              </div>
+            </div>
+          </div>
+          <button 
+            className="btn btn-sm btn-outline-info rounded-pill px-3 py-1.5 fw-semibold text-dark"
+            onClick={() => setShowPreferencesModal(true)}
+            style={{ fontSize: 11.5 }}
+          >
+            Configurar Horario
+          </button>
+        </div>
+      )}
+
       {/* KPI CARDS */}
       <div className="row g-3 mb-4">
-        <div className="col-12 col-md-3">
+        <div className="col-12 col-sm-6 col-xl-3">
           <div 
-            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
-            style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
+            className="card border rounded-4 p-4 shadow-sm h-100 position-relative overflow-hidden d-flex flex-column justify-content-between"
+            style={{ background: "var(--surface)", borderColor: "var(--header-border)", minHeight: 105 }}
           >
-            <span className="text-muted d-block small mb-1" style={{ fontSize: 11 }}>TOTAL EVENTOS</span>
-            <h3 className="fw-bold mb-0" style={{ fontSize: 26, color: "var(--text)" }}>{totalCount}</h3>
-            <div className="position-absolute opacity-10" style={{ right: 15, bottom: 8 }}>
-              <Bell size={50} />
+            <span className="text-muted d-block small mb-2 fw-semibold" style={{ fontSize: 11, letterSpacing: 0.3 }}>TOTAL DE EVENTOS</span>
+            <h3 className="fw-bold mb-0" style={{ fontSize: 28, color: "var(--text)" }}>{totalCount}</h3>
+            <div className="position-absolute opacity-10" style={{ right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <Bell size={44} style={{ color: "var(--text)" }} />
             </div>
           </div>
         </div>
 
-        <div className="col-12 col-md-3">
+        <div className="col-12 col-sm-6 col-xl-3">
           <div 
-            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
-            style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
+            className="card border rounded-4 p-4 shadow-sm h-100 position-relative overflow-hidden d-flex flex-column justify-content-between"
+            style={{ background: "var(--surface)", borderColor: "var(--header-border)", minHeight: 105 }}
           >
-            <span className="text-muted d-block small mb-1" style={{ fontSize: 11 }}>ALERTAS ACTIVAS</span>
-            <h3 className="fw-bold mb-0 text-danger" style={{ fontSize: 26 }}>{activeCount}</h3>
-            <div className="position-absolute opacity-10 text-danger" style={{ right: 15, bottom: 8 }}>
-              <AlertTriangle size={50} />
+            <span className="text-muted d-block small mb-2 fw-semibold" style={{ fontSize: 11, letterSpacing: 0.3 }}>ALERTAS ACTIVAS</span>
+            <h3 className="fw-bold mb-0 text-danger" style={{ fontSize: 28 }}>{activeCount}</h3>
+            <div className="position-absolute opacity-10 text-danger" style={{ right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <AlertTriangle size={44} />
             </div>
           </div>
         </div>
 
-        <div className="col-12 col-md-3">
+        <div className="col-12 col-sm-6 col-xl-3">
           <div 
-            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
-            style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
+            className="card border rounded-4 p-4 shadow-sm h-100 position-relative overflow-hidden d-flex flex-column justify-content-between"
+            style={{ background: "var(--surface)", borderColor: "var(--header-border)", minHeight: 105 }}
           >
-            <span className="text-muted d-block small mb-1 text-warning-emphasis" style={{ fontSize: 11 }}>SILENCIADAS (RF5)</span>
-            <h3 className="fw-bold mb-0 text-warning" style={{ fontSize: 26 }}>{silencedCount}</h3>
-            <div className="position-absolute opacity-10 text-warning" style={{ right: 15, bottom: 8 }}>
-              <VolumeX size={50} />
+            <span className="text-muted d-block small mb-2 fw-semibold text-warning-emphasis" style={{ fontSize: 11, letterSpacing: 0.3 }}>SILENCIADAS</span>
+            <h3 className="fw-bold mb-0 text-warning" style={{ fontSize: 28 }}>{silencedCount}</h3>
+            <div className="position-absolute opacity-10 text-warning" style={{ right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <VolumeX size={44} />
             </div>
           </div>
         </div>
 
-        <div className="col-12 col-md-3">
+        <div className="col-12 col-sm-6 col-xl-3">
           <div 
-            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
-            style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
+            className="card border rounded-4 p-4 shadow-sm h-100 position-relative overflow-hidden d-flex flex-column justify-content-between"
+            style={{ background: "var(--surface)", borderColor: "var(--header-border)", minHeight: 105 }}
           >
-            <span className="text-muted d-block small mb-1" style={{ fontSize: 11 }}>SOLUCIONADOS</span>
-            <h3 className="fw-bold mb-0 text-success" style={{ fontSize: 26 }}>{closedCount}</h3>
-            <div className="position-absolute opacity-10 text-success" style={{ right: 15, bottom: 8 }}>
-              <CheckCircle size={50} />
+            <span className="text-muted d-block small mb-2 fw-semibold" style={{ fontSize: 11, letterSpacing: 0.3 }}>SOLUCIONADOS</span>
+            <h3 className="fw-bold mb-0 text-success" style={{ fontSize: 28 }}>{closedCount}</h3>
+            <div className="position-absolute opacity-10 text-success" style={{ right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <CheckCircle size={44} />
             </div>
           </div>
         </div>
@@ -734,7 +776,7 @@ export function Notificaciones() {
                       <div className="d-flex align-items-center gap-2">
                         <VolumeX size={18} className="text-warning-emphasis" />
                         <span>
-                          <strong>Alerta Silenciada:</strong> Esta notificación no crítica ha sido silenciada en tus preferencias para no interrumpirte (HU13 - RF5).
+                          <strong>Alerta Silenciada:</strong> Esta notificación no crítica ha sido silenciada en tus preferencias para no interrumpirte.
                         </span>
                       </div>
                       <button 
@@ -840,10 +882,10 @@ export function Notificaciones() {
                 <div>
                   <h5 className="modal-title fw-bold d-flex align-items-center gap-2 mb-1" style={{ color: "var(--text)" }}>
                     <SlidersHorizontal size={20} className="text-primary" />
-                    Desactivar / Silenciar Notificaciones (RF5)
+                    Desactivar / Silenciar Notificaciones
                   </h5>
                   <p className="text-muted mb-0 small" style={{ fontSize: 12 }}>
-                    Historia de Usuario 13: Deshabilita o silencia eventos no críticos para evitar molestias.
+                    Deshabilita o silencia avisos no críticos y configura el horario de silencio nocturno para evitar molestias.
                   </p>
                 </div>
                 <button 
@@ -940,6 +982,62 @@ export function Notificaciones() {
                   <span className="badge bg-danger text-white px-2.5 py-1" style={{ fontSize: 10 }}>
                     Protegido
                   </span>
+                </div>
+
+                <hr className="my-1 text-muted" style={{ opacity: 0.15 }} />
+
+                {/* HISTORIA DE USUARIO 17 (RF5): HORARIO DE SILENCIO NOCTURNO */}
+                <div className="p-3 rounded-4 border bg-light">
+                  <div className="d-flex align-items-center justify-content-between gap-3 mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <Moon size={18} className="text-primary" />
+                      <div>
+                        <div className="fw-bold text-dark mb-0" style={{ fontSize: 13.5 }}>
+                          Horario de Silencio Nocturno (Modo No Molestar)
+                        </div>
+                        <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                          Desactiva sonidos de alerta en la noche sin dejar de registrar eventos.
+                        </div>
+                      </div>
+                    </div>
+                    <div className="form-check form-switch mb-0">
+                      <input
+                        type="checkbox"
+                        className="form-check-input cursor-pointer"
+                        checked={nightSilenceEnabled}
+                        onChange={(e) => setNightSilenceEnabled(e.target.checked)}
+                        style={{ width: "2.6em", height: "1.3em" }}
+                      />
+                    </div>
+                  </div>
+
+                  {nightSilenceEnabled && (
+                    <div className="mt-3 pt-2 border-top">
+                      <div className="row g-2 mb-2">
+                        <div className="col-6">
+                          <label className="form-label text-muted small mb-1" style={{ fontSize: 11 }}>Silenciar desde:</label>
+                          <input
+                            type="time"
+                            className="form-control form-control-sm"
+                            value={silentFrom}
+                            onChange={(e) => setSilentFrom(e.target.value)}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label text-muted small mb-1" style={{ fontSize: 11 }}>Silenciar hasta:</label>
+                          <input
+                            type="time"
+                            className="form-control form-control-sm"
+                            value={silentTo}
+                            onChange={(e) => setSilentTo(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-muted small p-2 bg-white rounded-3 border" style={{ fontSize: 11, lineHeight: 1.4 }}>
+                        ℹ️ <strong>Registro continuo:</strong> Durante este horario ({silentFrom} a {silentTo}), las alertas no emitirán sonidos, pero <strong>todos los eventos continuarán registrándose</strong> normalmente en el historial telemétrico.
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {preferencesSavedMsg && (

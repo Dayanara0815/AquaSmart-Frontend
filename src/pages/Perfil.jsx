@@ -365,7 +365,7 @@ export function Perfil() {
       <div className="mb-4">
         <h3 className="fw-bold mb-1" style={{ color: "var(--text)" }}>Perfil del Titular y Medidor</h3>
         <p className="text-muted mb-0 small" style={{ fontSize: 13 }}>
-          Gestión de usuario, especificaciones técnicas de la tubería y descarga del Certificado Digital (HU 19 - RF7).
+          Gestión de usuario, especificaciones técnicas de la tubería y descarga del Certificado Digital.
         </p>
       </div>
 
@@ -462,7 +462,7 @@ export function Perfil() {
               <div>
                 <h5 className="fw-bold mb-1 d-flex align-items-center gap-2" style={{ color: "var(--text)" }}>
                   <Award size={22} className="text-warning-emphasis" />
-                  Certificado Digital de Medidor (HU19 - RF7)
+                  Certificado Digital de Medidor
                 </h5>
                 <p className="text-muted small mb-0" style={{ fontSize: 12.5 }}>
                   Emisión oficial con código QR verificable para sustentar reclamos ante SEDAPAL sin dudas.
