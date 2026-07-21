@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { 
   Bell, AlertTriangle, Droplets, ShieldAlert, CheckCircle, 
   Calendar, Clock, ListFilter, HelpCircle, Activity,
-  Wrench, Play, CheckSquare, ShieldCheck, ChevronRight
+  Wrench, Play, CheckSquare, ShieldCheck, ChevronRight,
+  BellOff, VolumeX, SlidersHorizontal, Settings, Check
 } from "lucide-react";
 import { api } from "../api/Aquasmart";
 
@@ -44,7 +45,6 @@ const deduplicateAlerts = (rawAlerts) => {
   if (!Array.isArray(rawAlerts)) return [];
   const seen = new Set();
   return rawAlerts.filter((alert) => {
-    // Generar una clave combinando el mensaje/descripción y el día
     const day = alert.timestamp ? alert.timestamp.split(" ")[0] : "";
     const msgKey = `${alert.message || alert.description}_${day}`;
     if (seen.has(msgKey)) {
@@ -63,7 +63,7 @@ const parseAlertDate = (timestampStr) => {
     const dateParts = parts[0].split("/");
     if (dateParts.length === 3) {
       const day = parseInt(dateParts[0], 10);
-      const month = parseInt(dateParts[1], 10) - 1; // 0-indexed en JavaScript
+      const month = parseInt(dateParts[1], 10) - 1;
       const year = parseInt(dateParts[2], 10);
       let hour = 0;
       let minute = 0;
@@ -87,15 +87,15 @@ const getAlertPriority = (alert) => {
   const msg = (alert.message || "").toLowerCase();
 
   if (state === "resuelta" || state === "cerrada" || state === "cumplido") {
-    return 4; // Completado
+    return 4;
   }
   if (type.includes("fuga") || msg.includes("fuga")) {
-    return 1; // Fuga Activa
+    return 1;
   }
   if (state === "en revisión" || state === "en proceso" || state === "en reparación") {
-    return 2; // Auditoría o reparación en curso
+    return 2;
   }
-  return 3; // Corte preventivo o Paso de aire
+  return 3;
 };
 
 // Generar badge HTML para la prioridad de la alerta
@@ -151,21 +151,60 @@ export function Notificaciones() {
   const [alerts, setAlerts] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("TODAS"); // TODAS | ACTIVAS | HISTORICO
+  const [filter, setFilter] = useState("TODAS"); // TODAS | ACTIVAS | SILENCIADAS | HISTORICO
   const [sortBy, setSortBy] = useState("PRIORIDAD"); // PRIORIDAD | RECIENTES
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
   const [showConfirmCloseModal, setShowConfirmCloseModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
 
+  // --- HISTORIA DE USUARIO 13 (RF5): Silenciado de notificaciones ---
+  const [muteNonCritical, setMuteNonCritical] = useState(() => {
+    return localStorage.getItem("aquasmart_mute_non_critical") === "true";
+  });
+  const [muteAir, setMuteAir] = useState(() => {
+    return localStorage.getItem("aquasmart_mute_air") !== "false";
+  });
+  const [muteCuts, setMuteCuts] = useState(() => {
+    return localStorage.getItem("aquasmart_mute_cuts") !== "false";
+  });
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
+  const [preferencesSavedMsg, setPreferencesSavedMsg] = useState("");
+
   const userRole = localStorage.getItem("userRole") || "DOMESTICO";
   const userEmail = localStorage.getItem("userEmail");
+
+  // Helper para verificar si una alerta está silenciada
+  const isAlertSilenced = (alert) => {
+    if (!alert) return false;
+    const type = (alert.type || "").toLowerCase();
+    const msg = (alert.message || "").toLowerCase();
+
+    // Las fugas NUNCA se silenciarán automáticamente por seguridad
+    if (type.includes("fuga") || msg.includes("fuga")) return false;
+
+    if (muteNonCritical) return true;
+    if (muteAir && (type.includes("aire") || msg.includes("aire"))) return true;
+    if (muteCuts && (type.includes("corte") || msg.includes("corte"))) return true;
+
+    return false;
+  };
+
+  const handleSavePreferences = () => {
+    localStorage.setItem("aquasmart_mute_non_critical", muteNonCritical.toString());
+    localStorage.setItem("aquasmart_mute_air", muteAir.toString());
+    localStorage.setItem("aquasmart_mute_cuts", muteCuts.toString());
+    setPreferencesSavedMsg("¡Preferencias de silenciado guardadas con éxito!");
+    setTimeout(() => {
+      setPreferencesSavedMsg("");
+      setShowPreferencesModal(false);
+    }, 900);
+  };
 
   const handleSelectAlert = async (index, alert) => {
     setSelectedIndex(index);
     setActionMessage("");
     
-    // Solo marcar como inactiva/leída automáticamente para usuarios residenciales
     if (userRole === "DOMESTICO" || userRole === "COMERCIO") {
       if (alert && (alert.state === "Activa" || alert.state === "Pendiente" || alert.state === "Activo") && alert.active) {
         try {
@@ -224,7 +263,6 @@ export function Notificaciones() {
         setActionMessage("Auditoría LegalTech aprobada. Refacturación aplicada y caso cerrado.");
       }
       
-      // Recargar alertas
       const response = await api.getAlerts();
       const rawList = Array.isArray(response) && response.length > 0 ? response : FALLBACK_ALERTS;
       setAlerts(deduplicateAlerts(rawList));
@@ -279,12 +317,13 @@ export function Notificaciones() {
     if (userRole === "MUNICIPAL") {
       return desc.includes("vía pública") || desc.includes("via publica") || desc.includes("matriz") || msg.includes("vía pública") || type.includes("corte") || msg.includes("corte") || type.includes("fuga") || msg.includes("fuga");
     }
-    return true; // Técnico ve todo
+    return true;
   });
 
   // Filtrado según el selector de estado
   const filteredAlerts = roleFilteredAlerts.filter((alert) => {
-    if (filter === "ACTIVAS") return alert.active;
+    if (filter === "SILENCIADAS") return isAlertSilenced(alert);
+    if (filter === "ACTIVAS") return alert.active && !isAlertSilenced(alert);
     if (filter === "HISTORICO") return !alert.active;
     return true;
   });
@@ -302,8 +341,9 @@ export function Notificaciones() {
   });
 
   const totalCount = roleFilteredAlerts.length;
-  const activeCount = roleFilteredAlerts.filter((a) => a.active).length;
-  const closedCount = totalCount - activeCount;
+  const activeCount = roleFilteredAlerts.filter((a) => a.active && !isAlertSilenced(a)).length;
+  const silencedCount = roleFilteredAlerts.filter((a) => isAlertSilenced(a)).length;
+  const closedCount = roleFilteredAlerts.filter((a) => !a.active).length;
   const selectedAlert = sortedFilteredAlerts[selectedIndex] || sortedFilteredAlerts[0] || null;
 
   const renderActionButtons = (alert) => {
@@ -414,49 +454,114 @@ export function Notificaciones() {
         <div>
           <h3 className="fw-bold mb-1" style={{ color: "var(--text)" }}>Notificaciones e Incidencias</h3>
           <p className="text-muted mb-0 small" style={{ fontSize: 13 }}>
-            Monitoreo en tiempo real de alertas hídricas y estado de la red.
+            Monitoreo en tiempo real de alertas hídricas y preferencia de notificaciones.
           </p>
         </div>
-        <span className="badge rounded-pill border px-3 py-2 fw-semibold d-flex align-items-center gap-1" style={{ backgroundColor: "var(--surface-soft)", color: "var(--text)", borderColor: "var(--header-border)" }}>
-          <Bell size={13} className="text-primary" /> Historial Seguro (PostgreSQL)
-        </span>
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          {/* BOTÓN HU 13 (RF5): Silenciar Alertas */}
+          <button 
+            onClick={() => setShowPreferencesModal(true)}
+            className={`btn btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2 transition-all shadow-sm ${
+              muteNonCritical || muteAir || muteCuts 
+                ? "btn-warning text-dark border-warning" 
+                : "btn-outline-primary"
+            }`}
+            style={{ fontSize: 12.5 }}
+          >
+            {muteNonCritical || muteAir || muteCuts ? <BellOff size={15} /> : <Bell size={15} />}
+            <span>Desactivar / Silenciar Alertas (RF5)</span>
+            {(muteNonCritical || muteAir || muteCuts) && (
+              <span className="badge bg-dark text-white rounded-circle ms-1 px-1.5" style={{ fontSize: 10 }}>
+                {silencedCount}
+              </span>
+            )}
+          </button>
+
+          <span className="badge rounded-pill border px-3 py-2 fw-semibold d-flex align-items-center gap-1" style={{ backgroundColor: "var(--surface-soft)", color: "var(--text)", borderColor: "var(--header-border)" }}>
+            <Bell size={13} className="text-primary" /> Historial Seguro (PostgreSQL)
+          </span>
+        </div>
       </div>
+
+      {/* BANNER INFORMATIVO DE HU13 (RF5) SI HAY ALERTAS SILENCIADAS */}
+      {(muteNonCritical || muteAir || muteCuts) && (
+        <div className="alert alert-warning border-0 shadow-sm rounded-4 mb-4 p-3 d-flex align-items-center justify-content-between flex-wrap gap-2 animate-fade-in">
+          <div className="d-flex align-items-center gap-3">
+            <div className="p-2 bg-warning bg-opacity-25 rounded-circle text-warning-emphasis">
+              <VolumeX size={22} />
+            </div>
+            <div>
+              <div className="fw-bold text-dark mb-0" style={{ fontSize: 13.5 }}>
+                🔕 Notificaciones no críticas silenciadas (Historia de Usuario 13 - RF5)
+              </div>
+              <div className="text-muted small" style={{ fontSize: 12 }}>
+                Has configurado el silenciado para evitar molestias en alertas de poca urgencia 
+                ({muteNonCritical ? "todas las alertas no críticas" : `${muteAir ? "Paso de Aire" : ""} ${muteCuts ? "Cortes Preventivos" : ""}`}).
+                Las fugas graves continuarán notificándose.
+              </div>
+            </div>
+          </div>
+          <button 
+            className="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-semibold d-flex align-items-center gap-1"
+            onClick={() => setShowPreferencesModal(true)}
+            style={{ fontSize: 11.5 }}
+          >
+            <SlidersHorizontal size={13} />
+            Ajustar Silenciador
+          </button>
+        </div>
+      )}
 
       {/* KPI CARDS */}
       <div className="row g-3 mb-4">
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-3">
           <div 
-            className="card border rounded-4 p-4 shadow-sm h-100 position-relative overflow-hidden"
+            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
             style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
           >
-            <span className="text-muted d-block small mb-1">TOTAL EVENTOS</span>
-            <h3 className="fw-bold mb-0" style={{ fontSize: 28, color: "var(--text)" }}>{totalCount}</h3>
-            <div className="position-absolute opacity-10" style={{ right: 20, bottom: 10 }}>
-              <Bell size={60} />
+            <span className="text-muted d-block small mb-1" style={{ fontSize: 11 }}>TOTAL EVENTOS</span>
+            <h3 className="fw-bold mb-0" style={{ fontSize: 26, color: "var(--text)" }}>{totalCount}</h3>
+            <div className="position-absolute opacity-10" style={{ right: 15, bottom: 8 }}>
+              <Bell size={50} />
             </div>
           </div>
         </div>
-        <div className="col-12 col-md-4">
+
+        <div className="col-12 col-md-3">
           <div 
-            className="card border rounded-4 p-4 shadow-sm h-100 position-relative overflow-hidden"
+            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
             style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
           >
-            <span className="text-muted d-block small mb-1">ALERTAS ACTIVAS</span>
-            <h3 className="fw-bold mb-0 text-danger" style={{ fontSize: 28 }}>{activeCount}</h3>
-            <div className="position-absolute opacity-10 text-danger" style={{ right: 20, bottom: 10 }}>
-              <AlertTriangle size={60} />
+            <span className="text-muted d-block small mb-1" style={{ fontSize: 11 }}>ALERTAS ACTIVAS</span>
+            <h3 className="fw-bold mb-0 text-danger" style={{ fontSize: 26 }}>{activeCount}</h3>
+            <div className="position-absolute opacity-10 text-danger" style={{ right: 15, bottom: 8 }}>
+              <AlertTriangle size={50} />
             </div>
           </div>
         </div>
-        <div className="col-12 col-md-4">
+
+        <div className="col-12 col-md-3">
           <div 
-            className="card border rounded-4 p-4 shadow-sm h-100 position-relative overflow-hidden"
+            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
             style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
           >
-            <span className="text-muted d-block small mb-1">EVENTOS SOLUCIONADOS</span>
-            <h3 className="fw-bold mb-0 text-success" style={{ fontSize: 28 }}>{closedCount}</h3>
-            <div className="position-absolute opacity-10 text-success" style={{ right: 20, bottom: 10 }}>
-              <CheckCircle size={60} />
+            <span className="text-muted d-block small mb-1 text-warning-emphasis" style={{ fontSize: 11 }}>SILENCIADAS (RF5)</span>
+            <h3 className="fw-bold mb-0 text-warning" style={{ fontSize: 26 }}>{silencedCount}</h3>
+            <div className="position-absolute opacity-10 text-warning" style={{ right: 15, bottom: 8 }}>
+              <VolumeX size={50} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-3">
+          <div 
+            className="card border rounded-4 p-3.5 shadow-sm h-100 position-relative overflow-hidden"
+            style={{ background: "var(--surface)", borderColor: "var(--header-border)" }}
+          >
+            <span className="text-muted d-block small mb-1" style={{ fontSize: 11 }}>SOLUCIONADOS</span>
+            <h3 className="fw-bold mb-0 text-success" style={{ fontSize: 26 }}>{closedCount}</h3>
+            <div className="position-absolute opacity-10 text-success" style={{ right: 15, bottom: 8 }}>
+              <CheckCircle size={50} />
             </div>
           </div>
         </div>
@@ -475,7 +580,7 @@ export function Notificaciones() {
           <div className="d-flex align-items-center gap-3 flex-wrap">
             {/* Ordenar */}
             <div className="d-flex align-items-center gap-2">
-              <span className="text-muted small" style={{ fontSize: 11 }}>Ordenar por:</span>
+              <span className="text-muted small" style={{ fontSize: 11 }}>Ordenar:</span>
               <div className="btn-group btn-group-sm rounded-pill p-1 border" style={{ backgroundColor: "var(--surface-soft)", borderColor: "var(--header-border)" }}>
                 {["PRIORIDAD", "RECIENTES"].map((opt) => (
                   <button
@@ -496,9 +601,9 @@ export function Notificaciones() {
               </div>
             </div>
 
-            {/* Selector de filtro */}
+            {/* Selector de filtro de alertas */}
             <div className="btn-group btn-group-sm rounded-pill p-1 border" style={{ backgroundColor: "var(--surface-soft)", borderColor: "var(--header-border)" }}>
-              {["TODAS", "ACTIVAS", "HISTORICO"].map((opt) => (
+              {["TODAS", "ACTIVAS", "SILENCIADAS", "HISTORICO"].map((opt) => (
                 <button
                   key={opt}
                   type="button"
@@ -512,7 +617,7 @@ export function Notificaciones() {
                   }`}
                   style={{ fontSize: 11 }}
                 >
-                  {opt}
+                  {opt === "SILENCIADAS" ? `SILENCIADAS (${silencedCount})` : opt}
                 </button>
               ))}
             </div>
@@ -527,53 +632,75 @@ export function Notificaciones() {
                 className="d-flex flex-column gap-3 overflow-auto pr-1"
                 style={{ maxHeight: "480px" }}
               >
-                {sortedFilteredAlerts.map((alert, index) => (
-                  <button
-                    key={`${alert.id || index}`}
-                    onClick={() => void handleSelectAlert(index, alert)}
-                    className={`text-start border rounded-4 p-3 w-100 position-relative transition-all`}
-                    style={{ 
-                      appearance: "none",
-                      backgroundColor: selectedIndex === index ? "rgba(37, 99, 235, 0.05)" : "var(--surface)",
-                      borderColor: selectedIndex === index ? "#2563eb" : "var(--header-border)",
-                      boxShadow: selectedIndex === index ? "0 4px 12px rgba(37,99,235,0.05)" : "none",
-                      transform: selectedIndex === index ? "translateY(-1px)" : "none"
-                    }}
-                  >
-                    <div className="d-flex align-items-start gap-3">
-                      {/* Icono de color */}
-                      <div 
-                        className="rounded-circle p-2 d-flex align-items-center justify-content-center"
-                        style={{ 
-                          backgroundColor: alert.active ? "rgba(239, 68, 68, 0.1)" : "rgba(34, 197, 94, 0.1)",
-                          border: alert.active ? "1px solid rgba(239, 68, 68, 0.2)" : "1px solid rgba(34, 197, 94, 0.2)"
-                        }}
-                      >
-                        {getAlertIcon(alert.type || alert.message)}
-                      </div>
-                      
-                      <div className="flex-fill">
-                        <div className="d-flex align-items-center justify-content-between mb-1 gap-2">
-                          <span className="fw-bold text-truncate" style={{ fontSize: 13.5, color: "var(--text)", maxWidth: "160px" }}>
-                            {alert.message}
-                          </span>
-                          <span className={`badge rounded-pill px-2.5 py-1 ${getBadgeClass(alert.state)}`} style={{ fontSize: 9.5 }}>
-                            {alert.state || (alert.active ? "Activa" : "Cerrada")}
+                {sortedFilteredAlerts.map((alert, index) => {
+                  const silenced = isAlertSilenced(alert);
+                  return (
+                    <button
+                      key={`${alert.id || index}`}
+                      onClick={() => void handleSelectAlert(index, alert)}
+                      className="text-start border rounded-4 p-3 w-100 position-relative transition-all"
+                      style={{ 
+                        appearance: "none",
+                        backgroundColor: selectedIndex === index 
+                          ? "rgba(37, 99, 235, 0.05)" 
+                          : silenced 
+                            ? "var(--surface-soft)" 
+                            : "var(--surface)",
+                        borderColor: selectedIndex === index ? "#2563eb" : "var(--header-border)",
+                        boxShadow: selectedIndex === index ? "0 4px 12px rgba(37,99,235,0.05)" : "none",
+                        opacity: silenced ? 0.75 : 1,
+                        transform: selectedIndex === index ? "translateY(-1px)" : "none"
+                      }}
+                    >
+                      <div className="d-flex align-items-start gap-3">
+                        {/* Icono de color */}
+                        <div 
+                          className="rounded-circle p-2 d-flex align-items-center justify-content-center"
+                          style={{ 
+                            backgroundColor: silenced 
+                              ? "rgba(108, 117, 125, 0.15)" 
+                              : alert.active 
+                                ? "rgba(239, 68, 68, 0.1)" 
+                                : "rgba(34, 197, 94, 0.1)",
+                            border: silenced
+                              ? "1px solid rgba(108, 117, 125, 0.3)"
+                              : alert.active 
+                                ? "1px solid rgba(239, 68, 68, 0.2)" 
+                                : "1px solid rgba(34, 197, 94, 0.2)"
+                          }}
+                        >
+                          {silenced ? <BellOff className="text-secondary" size={20} /> : getAlertIcon(alert.type || alert.message)}
+                        </div>
+                        
+                        <div className="flex-fill">
+                          <div className="d-flex align-items-center justify-content-between mb-1 gap-2">
+                            <span className="fw-bold text-truncate" style={{ fontSize: 13.5, color: "var(--text)", maxWidth: "150px" }}>
+                              {alert.message}
+                            </span>
+                            {silenced ? (
+                              <span className="badge rounded-pill bg-secondary text-white px-2 py-0.5 d-flex align-items-center gap-1" style={{ fontSize: 9.5 }}>
+                                <BellOff size={9} /> Silenciada
+                              </span>
+                            ) : (
+                              <span className={`badge rounded-pill px-2.5 py-1 ${getBadgeClass(alert.state)}`} style={{ fontSize: 9.5 }}>
+                                {alert.state || (alert.active ? "Activa" : "Cerrada")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="d-flex align-items-center gap-2 mb-1.5 mt-1 flex-wrap">
+                            {getPriorityBadge(getAlertPriority(alert))}
+                          </div>
+                          <p className="text-muted mb-0 text-truncate" style={{ fontSize: 11.5 }}>
+                            {alert.description || alert.schedule}
+                          </p>
+                          <span className="text-muted d-block mt-2" style={{ fontSize: 9.5 }}>
+                            {alert.timestamp || "Reciente"}
                           </span>
                         </div>
-                        <div className="d-flex align-items-center gap-2 mb-1.5 mt-1 flex-wrap">
-                          {getPriorityBadge(getAlertPriority(alert))}
-                        </div>
-                        <p className="text-muted mb-0 text-truncate" style={{ fontSize: 11.5 }}>
-                          {alert.description || alert.schedule}
-                        </p>
-                        <span className="text-muted d-block mt-2" style={{ fontSize: 9.5 }}>
-                          {alert.timestamp || "Reciente"}
-                        </span>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -586,13 +713,39 @@ export function Notificaciones() {
                 >
                   <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-2" style={{ borderColor: "var(--header-border)" }}>
                     <h6 className="fw-bold mb-0" style={{ color: "var(--text)", fontSize: 15 }}>Detalle de Incidencia</h6>
-                    <span 
-                      className={`badge rounded-pill px-3 py-1.5 fw-semibold ${getBadgeClass(selectedAlert.state)}`}
-                      style={{ fontSize: 10.5 }}
-                    >
-                      {selectedAlert.state || (selectedAlert.active ? "Activa" : "Solucionada")}
-                    </span>
+                    <div className="d-flex align-items-center gap-2">
+                      {isAlertSilenced(selectedAlert) && (
+                        <span className="badge bg-secondary text-white rounded-pill px-2.5 py-1" style={{ fontSize: 10 }}>
+                          🔕 Silenciada por Usuario
+                        </span>
+                      )}
+                      <span 
+                        className={`badge rounded-pill px-3 py-1.5 fw-semibold ${getBadgeClass(selectedAlert.state)}`}
+                        style={{ fontSize: 10.5 }}
+                      >
+                        {selectedAlert.state || (selectedAlert.active ? "Activa" : "Solucionada")}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* NOTA DE SILENCIADO HU13 (RF5) SI APLICA */}
+                  {isAlertSilenced(selectedAlert) && (
+                    <div className="alert alert-warning border-0 rounded-3 p-3 mb-0 d-flex align-items-center justify-content-between gap-2" style={{ fontSize: 12.5 }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <VolumeX size={18} className="text-warning-emphasis" />
+                        <span>
+                          <strong>Alerta Silenciada:</strong> Esta notificación no crítica ha sido silenciada en tus preferencias para no interrumpirte (HU13 - RF5).
+                        </span>
+                      </div>
+                      <button 
+                        className="btn btn-sm btn-outline-dark rounded-pill px-2 py-0.5"
+                        style={{ fontSize: 11 }}
+                        onClick={() => setShowPreferencesModal(true)}
+                      >
+                        Ajustar
+                      </button>
+                    </div>
+                  )}
 
                   <div className="row g-3">
                     <div className="col-12">
@@ -670,13 +823,153 @@ export function Notificaciones() {
         ) : (
           <div className="text-center text-muted py-5 border border-dashed rounded-4">
             <CheckCircle size={48} className="text-success mb-3 opacity-60" />
-            <h6 className="fw-bold mb-1" style={{ color: "var(--text)" }}>Bandeja Vacía y Segura</h6>
+            <h6 className="fw-bold mb-1" style={{ color: "var(--text)" }}>Bandeja Vacía</h6>
             <p className="small mb-0 text-muted" style={{ maxWidth: 300, margin: "0 auto" }}>
-              No hay notificaciones activas o históricas bajo el filtro seleccionado.
+              No hay notificaciones bajo el filtro seleccionado.
             </p>
           </div>
         )}
       </div>
+
+      {/* MODAL DE SILENCIADO Y PREFERENCIAS DE ALERTAS (HU 13 - RF5) */}
+      {showPreferencesModal && (
+        <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", zIndex: 2000 }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style={{ background: "var(--surface)", color: "var(--text)" }}>
+              <div className="modal-header border-bottom pb-3 pt-4 px-4 d-flex justify-content-between align-items-center" style={{ borderColor: "var(--header-border)" }}>
+                <div>
+                  <h5 className="modal-title fw-bold d-flex align-items-center gap-2 mb-1" style={{ color: "var(--text)" }}>
+                    <SlidersHorizontal size={20} className="text-primary" />
+                    Desactivar / Silenciar Notificaciones (RF5)
+                  </h5>
+                  <p className="text-muted mb-0 small" style={{ fontSize: 12 }}>
+                    Historia de Usuario 13: Deshabilita o silencia eventos no críticos para evitar molestias.
+                  </p>
+                </div>
+                <button 
+                  type="button" 
+                  className="btn-close shadow-none" 
+                  onClick={() => setShowPreferencesModal(false)} 
+                  aria-label="Close"
+                ></button>
+              </div>
+
+              <div className="modal-body px-4 py-4 d-flex flex-column gap-3">
+                {/* SWITCH MASTER */}
+                <div className="p-3 rounded-4 border bg-light d-flex align-items-center justify-content-between gap-3">
+                  <div>
+                    <div className="fw-bold text-dark mb-0" style={{ fontSize: 13.5 }}>
+                      Silenciar TODAS las notificaciones no críticas
+                    </div>
+                    <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                      Desactiva avisos de paso de aire, cortes preventivos y notificaciones informativas.
+                    </div>
+                  </div>
+                  <div className="form-check form-switch mb-0">
+                    <input
+                      type="checkbox"
+                      className="form-check-input cursor-pointer"
+                      id="master-mute-switch"
+                      checked={muteNonCritical}
+                      onChange={(e) => setMuteNonCritical(e.target.checked)}
+                      style={{ width: "2.8em", height: "1.4em" }}
+                    />
+                  </div>
+                </div>
+
+                <hr className="my-1 text-muted" style={{ opacity: 0.15 }} />
+
+                <div className="fw-semibold text-muted small uppercase" style={{ fontSize: 11, letterSpacing: 0.5 }}>
+                  CONFIGURACIÓN POR TIPO DE EVENTO
+                </div>
+
+                {/* OPCIÓN: PASO DE AIRE */}
+                <div className="d-flex align-items-center justify-content-between gap-3 p-2">
+                  <div>
+                    <div className="fw-semibold text-dark" style={{ fontSize: 13 }}>
+                      🌬️ Eventos de Paso de Aire
+                    </div>
+                    <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                      Fluctuaciones de presión o aire atrapado en tuberías.
+                    </div>
+                  </div>
+                  <div className="form-check form-switch mb-0">
+                    <input
+                      type="checkbox"
+                      className="form-check-input cursor-pointer"
+                      checked={muteAir || muteNonCritical}
+                      disabled={muteNonCritical}
+                      onChange={(e) => setMuteAir(e.target.checked)}
+                      style={{ width: "2.5em", height: "1.25em" }}
+                    />
+                  </div>
+                </div>
+
+                {/* OPCIÓN: CORTES PREVENTIVOS */}
+                <div className="d-flex align-items-center justify-content-between gap-3 p-2">
+                  <div>
+                    <div className="fw-semibold text-dark" style={{ fontSize: 13 }}>
+                      🛡️ Avisos de Cortes Preventivos
+                    </div>
+                    <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                      Anuncios programados de mantenimientos en la zona.
+                    </div>
+                  </div>
+                  <div className="form-check form-switch mb-0">
+                    <input
+                      type="checkbox"
+                      className="form-check-input cursor-pointer"
+                      checked={muteCuts || muteNonCritical}
+                      disabled={muteNonCritical}
+                      onChange={(e) => setMuteCuts(e.target.checked)}
+                      style={{ width: "2.5em", height: "1.25em" }}
+                    />
+                  </div>
+                </div>
+
+                {/* OPCIÓN: FUGAS GRAVES (PROTEGIDA) */}
+                <div className="d-flex align-items-center justify-content-between gap-3 p-3 rounded-3 bg-danger bg-opacity-10 border border-danger border-opacity-25">
+                  <div>
+                    <div className="fw-bold text-danger" style={{ fontSize: 13 }}>
+                      🚨 Alertas de Fuga Grave / Fuga Silenciosa
+                    </div>
+                    <div className="text-muted small" style={{ fontSize: 11.5 }}>
+                      Protección crítica del hogar. Estas notificaciones permanecen activas siempre por seguridad hídrica.
+                    </div>
+                  </div>
+                  <span className="badge bg-danger text-white px-2.5 py-1" style={{ fontSize: 10 }}>
+                    Protegido
+                  </span>
+                </div>
+
+                {preferencesSavedMsg && (
+                  <div className="alert alert-success border-0 py-2 px-3 mb-0 rounded-3 text-center small fw-semibold">
+                    <Check size={16} className="me-1" /> {preferencesSavedMsg}
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer border-top pt-3 pb-4 px-4 d-flex gap-2 justify-content-end" style={{ borderColor: "var(--header-border)" }}>
+                <button 
+                  type="button" 
+                  className="btn btn-light px-4 py-2 rounded-3 fw-medium text-secondary" 
+                  onClick={() => setShowPreferencesModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary px-4 py-2 rounded-3 fw-semibold text-white d-flex align-items-center gap-1" 
+                  onClick={handleSavePreferences}
+                >
+                  <Check size={16} />
+                  Guardar Preferencias
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Confirmación de Cierre de Válvula */}
       {showConfirmCloseModal && (
